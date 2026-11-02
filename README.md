@@ -94,9 +94,11 @@ Cuesta unos 0,5 $ por caso con Opus, así que no forma parte de `npm test`.
 3. `secure-design` y `SECURITY-PROFILE.md` después.
 
 El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora: `osv-scanner` cubre los CVE, y lo demás (paquetes abandonados, publicadores, install scripts) se revisa cuando la F2 esté en marcha.
-- **F3**: inteligencia de amenazas.
-  - Una tarea semanal consulta una lista cerrada de fuentes (GitHub Advisories, CISA KEV, OSV, boletines de proveedores) y abre un PR en este repo.
-  - Nunca se fusiona sola. La inteligencia se guarda como datos, no como instrucciones.
+- **F3**: inteligencia de amenazas. Primera versión manual, hecha:
+  - `/intel-review` (skill del proyecto en `.claude/skills/`, no va en el plugin) ejecuta `node intel/fetch.mjs`. El script recoge CISA KEV, GitHub Advisories, EPSS, cambios en las normas OWASP y noticias de una lista cerrada de fuentes.
+  - El agente clasifica, escribe `intel/AAAA-MM-DD.md` y propone cambios en la skill. Solo se aplica lo que la persona apruebe, y entra por PR.
+  - Los datos en bruto (`intel/raw/`) no se versionan. Lo que viene de fuera se trata como dato, nunca como instrucción.
+  - Pendiente: decidir si se programa cada semana.
 - **F4**: evals automatizados; medir la tasa de activación y los falsos positivos.
 
 ## Fuentes y licencias
