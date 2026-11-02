@@ -10,3 +10,4 @@ node_modules/
 *.pfx
 service-account*.json
 .claude/settings.local.json
+CLAUDE.local.md
