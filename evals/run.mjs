@@ -1,8 +1,9 @@
 // Ejecuta evals/cases.json con `claude -p --plugin-dir <este repo>` en proyectos ficticios.
 // Uso: node evals/run.mjs <carpeta-de-salida, fuera del repo> [modelo] [id1,id2…]
 // Cuesta dinero (≈0,5 $ por caso con Opus): no forma parte de `npm test`.
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -90,6 +91,10 @@ function run(c) {
       }
       const triggered = skills.some((s) => String(s).includes('security-checklist'));
       const hookSeen = raw.includes('[secdev] Stack detectado');
+      // El stream de `claude -p` no muestra la salida de PostToolUse: el aviso se detecta por el
+      // fichero de control que deja hooks/post-edit.mjs para esa sesión.
+      const sid = (raw.match(/"session_id":"([A-Za-z0-9_-]+)"/) ?? [])[1];
+      const editReminder = Boolean(sid) && existsSync(join(tmpdir(), 'secdev-sessions', `${sid}.reminded`));
       const missing = (c.mustMention ?? []).filter((w) => !finalText.toLowerCase().includes(w.toLowerCase()));
       const controls = (c.expectControls ?? []).filter((id) => !finalText.includes(id));
       // Coherencia: con alguna fila P0 en ❌ el veredicto tiene que ser BLOQUEA.
@@ -97,7 +102,7 @@ function run(c) {
       const p0Fail = /^\|\s*P0-\d\d\s*\|[^\n]*\|\s*❌\s*\|/m.test(finalText);
       const verdictOk = !c.trigger || (verdict !== null && (!p0Fail || verdict === 'BLOQUEA'));
       const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk));
-      resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
+      resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
     });
   });
 }
@@ -105,5 +110,5 @@ function run(c) {
 mkdirSync(outDir, { recursive: true });
 const results = await Promise.all(cases.map(run));
 writeFileSync(join(outDir, 'results.json'), JSON.stringify(results, null, 2));
-for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${r.id.padEnd(22)} esperado=${r.expected} activó=${r.triggered} cargó=${r.loaded} veredicto=${r.verdict}${r.verdictOk ? '' : '(INCOHERENTE)'} hook=${r.hookSeen} lecturasRef=${r.refReads} erroresRef=${r.refErrors} coste=${r.cost} faltanCtrl=${JSON.stringify(r.missingControls)} faltanMenc=${JSON.stringify(r.missingMentions)}`);
+for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${r.id.padEnd(22)} esperado=${r.expected} activó=${r.triggered} cargó=${r.loaded} veredicto=${r.verdict}${r.verdictOk ? '' : '(INCOHERENTE)'} hook=${r.hookSeen} aviso=${r.editReminder} lecturasRef=${r.refReads} erroresRef=${r.refErrors} coste=${r.cost} faltanCtrl=${JSON.stringify(r.missingControls)} faltanMenc=${JSON.stringify(r.missingMentions)}`);
 process.exit(results.every((r) => r.ok) ? 0 : 1);

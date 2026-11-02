@@ -1,5 +1,5 @@
 {
-  "description": "secdev: detecta el stack al abrir sesión y recuerda la checklist de seguridad",
+  "description": "secdev: detecta el stack al abrir sesión y recuerda la checklist de seguridad tras editar algo de riesgo",
   "hooks": {
     "SessionStart": [
       {
@@ -7,6 +7,18 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-edit.mjs\"",
             "timeout": 5
           }
         ]

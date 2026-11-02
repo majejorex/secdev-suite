@@ -14,6 +14,10 @@ test('plugin.json, marketplace.json y hooks.json son JSON válidos y coherentes'
   const hooks = JSON.parse(read('hooks/hooks.json'));
   assert.equal(market.plugins[0].name, plugin.name);
   assert.ok(hooks.hooks.SessionStart[0].hooks[0].command.includes('${CLAUDE_PLUGIN_ROOT}'));
+  const post = hooks.hooks.PostToolUse[0];
+  assert.equal(post.matcher, 'Edit|Write|MultiEdit|NotebookEdit');
+  assert.ok(post.hooks[0].command.includes('${CLAUDE_PLUGIN_ROOT}/hooks/post-edit.mjs'));
+  for (const h of [...hooks.hooks.SessionStart, ...hooks.hooks.PostToolUse].flatMap((x) => x.hooks)) assert.ok(h.timeout <= 5);
 });
 
 test('cada skill tiene frontmatter con name igual a su carpeta y description', () => {

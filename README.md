@@ -20,6 +20,12 @@ Suite de seguridad propia para agentes de código (Claude Code). Se reparte como
   - Si encuentra algo, inyecta dos líneas fijas con las normas aplicables y el recordatorio de la skill. Nunca imprime contenido del repo.
   - Si no encuentra nada, calla.
   - Nunca falla y no sigue enlaces.
+- **Hook `PostToolUse`** (Edit, Write, MultiEdit, NotebookEdit), añadido en v0.2.0:
+  - Si una edición toca algo de riesgo, recuerda cargar la checklist antes de dar la tarea por terminada.
+  - Lo detecta por la ruta (reglas, `.env`, claves, cabeceras) o por el texto escrito: auth, roles, endpoints, pagos, tokens en el cliente, subidas, secretos, CORS, ejecución con datos externos, LLM.
+  - Avisa como mucho una vez por sesión y no bloquea.
+  - Solo nombra categorías de una lista fija, nunca texto del repo.
+  - Ignora docs, estilos, imágenes y lockfiles.
 
 No sustituye a:
 - `security-audit` / `claude-security` (auditoría profunda);
@@ -72,7 +78,7 @@ Cuesta unos 0,5 $ por caso con Opus, así que no forma parte de `npm test`.
 ## Hoja de ruta
 
 - **F1**:
-  - **hook de aviso `PreToolUse`** (decidido el 2026-11-02): al editar rutas de riesgo (reglas, auth, pagos, functions…) recuerda cargar `secdev:security-checklist`. Avisa, no bloquea. Motivo: en los evals la skill se activó solo en unos 3 de cada 4 casos positivos;
+  - ~~hook de aviso~~ hecho en v0.2.0 como `PostToolUse`, con el formato que usa `security-guidance` (`hookSpecificOutput.additionalContext`). Motivo: sin él, en los evals la skill se activaba en unos 3 de cada 4 casos positivos;
   - skill `authz-tests` (genera la matriz y los tests de BOLA y BFLA);
   - skill `secure-design`;
   - `SECURITY-PROFILE.md` por proyecto.
