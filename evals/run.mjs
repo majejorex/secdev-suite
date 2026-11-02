@@ -90,7 +90,7 @@ function run(c) {
         if (m.type === 'result') { finalText = m.result ?? ''; cost = m.total_cost_usd; }
       }
       const triggered = skills.some((s) => String(s).includes('security-checklist'));
-      const hookSeen = /[secdev] (Stack detectado|Detected stack|Stack detected)/.test(raw);
+      const hookSeen = /\[secdev\] (Stack detectado|Detected stack)/.test(raw);
       // The `claude -p` stream does not show PostToolUse output: the reminder is detected through the
       // control file that hooks/post-edit.mjs leaves for that session.
       const sid = (raw.match(/"session_id":"([A-Za-z0-9_-]+)"/) ?? [])[1];
