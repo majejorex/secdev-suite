@@ -32,6 +32,10 @@ const FIX = {
     'src/auth/session.ts': "import AsyncStorage from '@react-native-async-storage/async-storage';\n\nexport async function login(email: string, password: string) {\n  const res = await fetch('https://api.example.com/login', { method: 'POST', body: JSON.stringify({ email, password }) });\n  return res.json() as Promise<{ token: string }>;\n}\n",
     'src/screens/Welcome.tsx': "import { Text } from 'react-native';\nexport default function Welcome() { return <Text>Welcome to the app, start here.</Text>; }\n",
   },
+  desktop: {
+    'package.json': { main: 'main.js', devDependencies: { electron: '^33.0.0' } },
+    'main.js': "const { app, BrowserWindow } = require('electron');\napp.whenReady().then(() => new BrowserWindow({ width: 800, height: 600 }).loadFile('index.html'));\n",
+  },
   next: {
     'package.json': { dependencies: { next: '15.0.0', react: '19.0.0' } },
     'app/page.tsx': "export default function Page() { return <button className=\"btn-primary\">Sign in</button>; }\n",

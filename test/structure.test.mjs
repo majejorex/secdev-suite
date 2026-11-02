@@ -59,6 +59,15 @@ test('SKILL.md keeps the safety rules for reviewing untrusted repos', () => {
   assert.ok(md.split('\n').length < 150, 'SKILL.md must stay under 150 lines');
 });
 
+test('every PostToolUse category names controls that exist in the checklist', async () => {
+  const { CONTROLS } = await import('../hooks/risk.mjs');
+  const checklist = read('skills/security-checklist/SKILL.md');
+  const cats = [...read('hooks/risk.mjs').matchAll(/^\s*\['([^']+)', \//gm)].map((m) => m[1]);
+  assert.ok(cats.length >= 10);
+  for (const c of cats) assert.ok(CONTROLS[c]?.length, `${c}: no controls in CONTROLS`);
+  for (const id of Object.values(CONTROLS).flat()) assert.ok(checklist.includes(`| ${id} |`), `${id} is not in SKILL.md`);
+});
+
 test('the evals include cases where the skill must NOT activate', () => {
   const { cases } = JSON.parse(read('evals/cases.json'));
   assert.ok(cases.filter((c) => c.trigger === false).length >= 3);

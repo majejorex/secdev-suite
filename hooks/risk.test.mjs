@@ -29,6 +29,22 @@ test('Stripe webhook, tokens on the device and secrets', () => {
   assert.ok(classify('src/x.ts', "const apiKey = 'abc'").includes('secrets'));
 });
 
+test('desktop apps, signing and updates, crypto, re-authentication and archives', () => {
+  assert.ok(classify('src/main.ts', 'new BrowserWindow({ webPreferences: { nodeIntegration: true } })').includes('desktop windows and IPC'));
+  assert.ok(classify('src/main.ts', "ipcMain.handle('read-file', (e, p) => fs.readFile(p))").includes('desktop windows and IPC'));
+  assert.ok(classify('src-tauri/tauri.conf.json', '{}').includes('app signing and platform config'));
+  assert.ok(classify('app.json', '{ "updates": { "codeSigningCertificate": "./certs/cert.pem" } }').includes('app signing and platform config'));
+  assert.ok(classify('android/app/upload.keystore', '').includes('secrets'));
+  assert.ok(classify('src/crypto.ts', "crypto.createCipheriv('aes-256-gcm', key, iv)").includes('cryptography'));
+  assert.ok(classify('src/account.ts', 'await reauthenticateWithCredential(user, cred); await updateEmail(user, e);').includes('auth and sessions'));
+  assert.ok(classify('src/import.ts', "import AdmZip from 'adm-zip'").includes('file uploads'));
+  assert.ok(classify('src/limit.ts', "const ip = req.headers['x-forwarded-for']").includes('headers and CORS'));
+});
+
+test('a plain version bump in app.json does not warn', () => {
+  assert.deepEqual(classify('app.json', '{ "expo": { "version": "1.2.3" } }'), []);
+});
+
 test('the negative cases from the evals do not warn', () => {
   assert.deepEqual(classify('app/globals.css', '.btn-primary { background: #1e3a8a; }'), []);
   assert.deepEqual(classify('functions/src/report.ts', 'export function formatDate(d: Date) { return `${d.getDate()}/${d.getMonth() + 1}`; }'), []);
@@ -43,7 +59,8 @@ test('Windows paths and MultiEdit', () => {
 
 test('the message only uses fixed categories and names the skill', () => {
   assert.equal(message([]), '');
-  assert.match(message(['payments and webhooks']), /^\[secdev\] This change touches: payments and webhooks\. .*secdev:security-checklist/);
+  assert.match(message(['payments and webhooks']), /^\[secdev\] This change touches: payments and webhooks \(P2-02\)\. .*secdev:security-checklist/);
+  assert.match(message(['auth and sessions', 'file uploads']), /auth and sessions \(P0-01, P0-06\), file uploads \(P0-14\)\./);
 });
 
 test('the session id is sanitized for use as a file name', () => {

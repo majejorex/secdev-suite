@@ -69,6 +69,12 @@ test('a folder named Android without a Gradle project is not mobile', () => {
   assert.deepEqual(detectStack(fixture({ 'android/app/build.gradle': '' })), ['mobile']);
 });
 
+test('detects desktop apps (Electron, Tauri) and Capacitor as mobile', () => {
+  assert.deepEqual(detectStack(fixture({ 'package.json': JSON.stringify({ devDependencies: { electron: '1' } }) })), ['desktop']);
+  assert.deepEqual(detectStack(fixture({ 'src-tauri/tauri.conf.json': '{}' })), ['desktop']);
+  assert.deepEqual(detectStack(fixture({ 'package.json': JSON.stringify({ dependencies: { '@capacitor/core': '1' } }) })), ['mobile']);
+});
+
 test('standards by stack', () => {
   assert.deepEqual(standardsFor(['python']), ['ASVS 5.0']);
   assert.deepEqual(standardsFor(['firebase', 'mobile', 'llm']), ['ASVS 5.0', 'API Security Top 10 2023', 'MASVS 2.1']);

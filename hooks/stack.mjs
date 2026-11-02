@@ -11,7 +11,8 @@ const MAX_PACKAGE_JSON_BYTES = 1_000_000;
 const RULES = [
   { tag: 'firebase', files: ['firebase.json', 'firestore.rules', 'storage.rules'], deps: ['firebase', 'firebase-admin', 'firebase-functions'] },
   { tag: 'supabase', files: ['supabase/config.toml'], deps: ['@supabase/supabase-js'] },
-  { tag: 'mobile', files: ['android/app/build.gradle', 'android/app/build.gradle.kts', 'ios/Podfile'], deps: ['expo', 'react-native'] },
+  { tag: 'mobile', files: ['android/app/build.gradle', 'android/app/build.gradle.kts', 'ios/Podfile'], deps: ['expo', 'react-native', '@capacitor/core'] },
+  { tag: 'desktop', files: ['src-tauri/tauri.conf.json'], deps: ['electron', '@tauri-apps/api'] },
   { tag: 'stripe', deps: ['stripe', '@stripe/stripe-js', '@stripe/stripe-react-native'] },
   { tag: 'next', deps: ['next'] },
   { tag: 'api', deps: ['express', 'fastify', 'hono', 'koa', '@nestjs/core'] },
@@ -94,6 +95,6 @@ export function render(tags) {
   if (tags.length === 0) return '';
   return [
     `[secdev] Detected stack: ${tags.join(', ')}. Applicable standards: ${standardsFor(tags).join(' + ')}.`,
-    '[secdev] When designing, or before calling done anything that touches auth, roles, user data, payments, uploads, secrets or access rules, load the secdev:security-checklist skill.',
+    '[secdev] When designing, or before calling done anything that touches auth, roles, user data, payments, uploads, secrets, access rules or app signing and updates, load the secdev:security-checklist skill.',
   ].join('\n');
 }
