@@ -6,5 +6,6 @@
     "name": "Manu Jordan",
     "url": "https://github.com/majejorex"
   },
+  "license": "MIT",
   "keywords": ["security", "owasp", "asvs", "masvs", "api-security", "firebase", "checklist"]
 }

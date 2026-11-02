@@ -53,7 +53,11 @@ El hook es código que corre en todas tus sesiones, así que una actualización 
   ```
   git fetch --tags && git diff <tag-instalado>..origin/main -- hooks/ .claude-plugin/
   ```
-- Si el plan de GitHub lo permite, protege `main`: sin push directo y con PR revisado.
+- Los tags `v*` están protegidos: no se pueden mover ni borrar, así que el diff entre tags es fiable.
+
+## Contribuir
+
+Fork y pull request; reglas en [CONTRIBUTING.md](CONTRIBUTING.md). Las vulnerabilidades se avisan en privado: [SECURITY.md](SECURITY.md).
 
 ## Probar
 
@@ -97,4 +101,4 @@ Los IDs, títulos de capítulo y enunciados de controles salen de los repositori
 
 Esos documentos se publican bajo licencias Creative Commons de OWASP. Aquí solo se citan IDs, títulos y los enunciados de una línea de MASVS, con atribución. El resto del texto es propio.
 
-Repo privado; todos los derechos reservados salvo lo citado.
+El código y el texto propio se publican bajo licencia [MIT](LICENSE). Lo citado de OWASP conserva su licencia original.
