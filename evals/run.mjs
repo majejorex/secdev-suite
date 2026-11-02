@@ -58,7 +58,9 @@ function run(c) {
     const dir = join(outDir, 'fx', c.id);
     makeFixture(dir, c.stack);
     const args = ['-p', c.prompt, '--plugin-dir', suite, '--output-format', 'stream-json', '--verbose',
-      '--max-budget-usd', '1.5', '--permission-mode', 'acceptEdits'];
+      '--max-budget-usd', '1.5', '--permission-mode', 'acceptEdits',
+      // Without it, `claude -p` denies reading references/ (outside the fixture) and the case fails for the wrong reason.
+      '--add-dir', suite];
     if (model) args.push('--model', model);
     const p = spawn('claude', args, { cwd: dir }); // native claude.exe: no shell, so prompts arrive without re-escaping
     p.stdin.end();
