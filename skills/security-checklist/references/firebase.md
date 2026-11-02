@@ -1,51 +1,51 @@
-# Firebase: qué revisar
+# Firebase: what to review
 
-En Firebase las reglas de seguridad (Firestore, Storage, Realtime Database) **son** la capa de autorización para todo lo que el cliente lee o escribe directamente. Las Cloud Functions usan el Admin SDK, que **se salta las reglas**: dentro de una función, la autorización es responsabilidad del código.
+In Firebase, the security rules (Firestore, Storage, Realtime Database) **are** the authorization layer for everything the client reads or writes directly. Cloud Functions use the Admin SDK, which **bypasses the rules**: inside a function, authorization is the code's responsibility.
 
-## Reglas (Firestore y Storage) — P0-02, P0-03, P0-09, P0-14
+## Rules (Firestore and Storage): P0-02, P0-03, P0-09, P0-14
 
-- Por defecto todo denegado; nada de `allow read, write: if true` ni reglas de prueba con fecha.
-- `request.auth != null` **no** es autorización: solo dice que hay sesión. Hay que atar el recurso al usuario (`resource.data.ownerId == request.auth.uid`) o a un rol verificado.
-- Roles desde custom claims (`request.auth.token.role`) puestos por el servidor, o desde un documento que el cliente no puede escribir. Nunca desde un campo que el propio usuario edita.
-- Escrituras con lista blanca de campos: `request.resource.data.keys().hasOnly([...])` y `diff(...).affectedKeys().hasOnly([...])` para impedir la asignación masiva (`role`, `isVerified`, `balance`).
-- Validación de tipos y tamaños en las reglas: strings con longitud máxima, enums cerrados.
-- Las reglas no filtran resultados: una consulta se rechaza entera si la regla no queda garantizada por la propia consulta. El riesgo real es un `allow list` (o `read`) amplio, como `if request.auth != null`, que deja a cualquier usuario con sesión leer la colección entera. Revisa `list` por separado de `get`.
-- Storage: `request.resource.size` y `contentType` limitados; rutas privadas con el `uid` en la ruta y comprobado.
-- **Tests** con el emulador y `@firebase/rules-unit-testing`: por cada colección sensible, un caso de «otro usuario» y otro de «sin sesión» que deben fallar (P0-15).
+- Everything denied by default; no `allow read, write: if true` and no dated test rules.
+- `request.auth != null` is **not** authorization: it only says there is a session. Tie the resource to the user (`resource.data.ownerId == request.auth.uid`) or to a verified role.
+- Roles from custom claims (`request.auth.token.role`) set by the server, or from a document the client cannot write. Never from a field the user edits.
+- Writes with a field allowlist: `request.resource.data.keys().hasOnly([...])` and `diff(...).affectedKeys().hasOnly([...])` to prevent mass assignment (`role`, `isVerified`, `balance`).
+- Type and size validation in the rules: strings with a maximum length, closed enums.
+- Rules do not filter results: a query is rejected entirely if the rule is not guaranteed by the query itself. The real risk is a broad `allow list` (or `read`), such as `if request.auth != null`, which lets any signed-in user read the whole collection. Review `list` separately from `get`.
+- Storage: limit `request.resource.size` and `contentType`; private paths with the `uid` in the path and checked.
+- **Tests** with the emulator and `@firebase/rules-unit-testing`: for each sensitive collection, an "other user" case and a "no session" case that must fail (P0-15).
 
-## Cloud Functions — P0-02, P0-05, P0-08
+## Cloud Functions: P0-02, P0-05, P0-08
 
-- Callables: comprobar `request.auth` y el permiso sobre el recurso concreto en cada una.
-- Validar `request.data` con un esquema (zod); no pasar el objeto entero a `set`/`update`.
-- App Check: `enforceAppCheck: true` en callables expuestas a la app, sobre todo las caras o con abuso posible.
-- Errores: `HttpsError` con mensaje genérico; el detalle va al log, no al cliente.
-- HTTP functions (webhooks): verificar la firma (Stripe: `constructEvent` con el raw body); responder rápido y procesar de forma idempotente.
-- Triggers: la entrega es al menos una vez, así que tienen que ser idempotentes (marca de evento procesado o transacción).
-- Secretos con `defineSecret` (Secret Manager), no en el código ni en `.env` versionado.
-- Rate limit propio en funciones caras: Firebase no lo trae por función.
+- Callables: check `request.auth` and the permission on the specific resource in each one.
+- Validate `request.data` with a schema (zod); do not pass the whole object to `set`/`update`.
+- App Check: `enforceAppCheck: true` on callables exposed to the app, especially expensive ones or ones open to abuse.
+- Errors: `HttpsError` with a generic message; the detail goes to the log, not to the client.
+- HTTP functions (webhooks): verify the signature (Stripe: `constructEvent` with the raw body); respond fast and process idempotently.
+- Triggers: delivery is at least once, so they must be idempotent (processed-event marker or transaction).
+- Secrets with `defineSecret` (Secret Manager), not in the code or in a versioned `.env`.
+- Own rate limit on expensive functions: Firebase does not provide one per function.
 
-## Auth — P0-01, P0-06
+## Auth: P0-01, P0-06
 
-- La protección contra enumeración de emails está activada.
-- MFA (TOTP o SMS) obligatorio para el staff. Requiere actualizar a Firebase Authentication with Identity Platform. Se comprueba en servidor: en reglas con `request.auth.token.firebase.sign_in_second_factor`, en funciones con el mismo campo del token decodificado. Que solo lo pida la UI no cuenta.
-- Revocación: `revokeRefreshTokens` no invalida los ID tokens ya emitidos (válidos hasta 1 h) y `onCall` no comprueba la revocación. En funciones sensibles, `verifyIdToken(token, true)` o una comprobación propia. En reglas, guardar una marca de revocación y compararla con `request.auth.token.auth_time`.
-- Persistencia de la sesión en web: el SDK guarda el refresh token en el almacenamiento del navegador. ASVS 14.3.3 admite tokens de sesión ahí. Recomendación propia: con CSP y defensa contra XSS.
-- Persistencia en React Native: `getReactNativePersistence(AsyncStorage)` lo guarda en AsyncStorage, que no está cifrado. Es ⚠️: preferir un adaptador sobre SecureStore, o dejar escrito el riesgo aceptado.
-- Dominios autorizados de Auth limitados a los propios.
+- Email enumeration protection is turned on.
+- MFA (TOTP or SMS) required for staff. It requires upgrading to Firebase Authentication with Identity Platform. Check it on the server: in rules with `request.auth.token.firebase.sign_in_second_factor`, in functions with the same field of the decoded token. A UI-only requirement does not count.
+- Revocation: `revokeRefreshTokens` does not invalidate ID tokens already issued (valid for up to 1 h) and `onCall` does not check revocation. In sensitive functions, use `verifyIdToken(token, true)` or your own check. In rules, store a revocation marker and compare it with `request.auth.token.auth_time`.
+- Session persistence on the web: the SDK stores the refresh token in browser storage. ASVS 14.3.3 allows session tokens there. Own recommendation: with CSP and XSS defense.
+- Persistence in React Native: `getReactNativePersistence(AsyncStorage)` stores it in AsyncStorage, which is not encrypted. This is ⚠️: prefer an adapter over SecureStore, or write down the accepted risk.
+- Authorized Auth domains limited to your own.
 
-## Claves y configuración — P0-04, P0-10, P0-11
+## Keys and configuration: P0-04, P0-10, P0-11
 
-- La `apiKey` de Firebase en el cliente es un identificador público, no un secreto. Hay que restringirla en Google Cloud (por app o referer y por API).
-- Cuentas de servicio y JSON de credenciales nunca en el cliente ni en el repo.
-- Un proyecto Firebase por entorno (dev, staging, prod); nada de datos reales en dev.
-- IAM: cuentas de servicio con roles concretos; nada de Owner o Editor por comodidad.
+- The Firebase `apiKey` in the client is a public identifier, not a secret. Restrict it in Google Cloud (by app or referrer and by API).
+- Service accounts and credential JSON never in the client or the repo.
+- One Firebase project per environment (dev, staging, prod); no real data in dev.
+- IAM: service accounts with specific roles; no Owner or Editor for convenience.
 
-## Hosting — P0-12
+## Hosting: P0-12
 
-- Cabeceras en `firebase.json` (`hosting.headers`): CSP, HSTS, X-Content-Type-Options, frame-ancestors o X-Frame-Options, Referrer-Policy.
+- Headers in `firebase.json` (`hosting.headers`): CSP, HSTS, X-Content-Type-Options, frame-ancestors or X-Frame-Options, Referrer-Policy.
 
-## Datos y recuperación — P1-07, P2-03
+## Data and recovery: P1-07, P2-03
 
-- PITR activado y exports programados a un bucket con retención; restauración probada al menos una vez.
-- El borrado de cuenta alcanza todas las colecciones y los ficheros de Storage del usuario. Decidir y documentar qué pasa con los backups.
-- Alertas de presupuesto en Google Cloud (P1-06).
+- PITR enabled and scheduled exports to a bucket with retention; restore tested at least once.
+- Account deletion reaches all collections and the user's Storage files. Decide and document what happens to the backups.
+- Budget alerts in Google Cloud (P1-06).

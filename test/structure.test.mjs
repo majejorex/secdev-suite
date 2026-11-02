@@ -1,4 +1,4 @@
-// Comprueba que el plugin es cargable: JSON válidos, frontmatter de cada skill, enlaces internos y IDs citados por los evals.
+// Checks that the plugin is loadable: valid JSON, frontmatter of each skill, internal links and the IDs cited by the evals.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
-test('plugin.json, marketplace.json y hooks.json son JSON válidos y coherentes', () => {
+test('plugin.json, marketplace.json and hooks.json are valid and consistent JSON', () => {
   const plugin = JSON.parse(read('.claude-plugin/plugin.json'));
   const market = JSON.parse(read('.claude-plugin/marketplace.json'));
   const hooks = JSON.parse(read('hooks/hooks.json'));
@@ -20,53 +20,58 @@ test('plugin.json, marketplace.json y hooks.json son JSON válidos y coherentes'
   for (const h of [...hooks.hooks.SessionStart, ...hooks.hooks.PostToolUse].flatMap((x) => x.hooks)) assert.ok(h.timeout <= 5);
 });
 
-test('cada skill tiene frontmatter con name igual a su carpeta y description', () => {
+test('each skill has frontmatter with name equal to its folder and a description', () => {
   for (const dir of readdirSync(join(ROOT, 'skills'))) {
     const md = read(`skills/${dir}/SKILL.md`);
     const fm = md.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    assert.ok(fm, `${dir}: falta frontmatter`);
+    assert.ok(fm, `${dir}: missing frontmatter`);
     assert.match(fm[1], new RegExp(`^name: ${dir}$`, 'm'));
-    assert.match(fm[1], /^description: .{80,}/m, `${dir}: description vacía o corta`);
+    assert.match(fm[1], /^description: .{80,}/m, `${dir}: description empty or too short`);
   }
 });
 
-test('los enlaces relativos de las skills apuntan a ficheros que existen', () => {
+test('relative links in the skills point to files that exist', () => {
   for (const dir of readdirSync(join(ROOT, 'skills'))) {
     const md = read(`skills/${dir}/SKILL.md`);
     for (const [, href] of md.matchAll(/\]\(([^)#:]+\.md)\)/g)) {
-      assert.ok(existsSync(join(ROOT, 'skills', dir, href)), `${dir}: enlace roto ${href}`);
+      assert.ok(existsSync(join(ROOT, 'skills', dir, href)), `${dir}: broken link ${href}`);
     }
   }
 });
 
-test('los controles que esperan los evals existen en la checklist', () => {
+test('the controls the evals expect exist in the checklist', () => {
   const checklist = read('skills/security-checklist/SKILL.md');
   const { cases } = JSON.parse(read('evals/cases.json'));
   for (const c of cases) {
-    for (const id of c.expectControls ?? []) assert.ok(checklist.includes(`| ${id} |`), `${c.id}: ${id} no está en SKILL.md`);
+    for (const id of c.expectControls ?? []) assert.ok(checklist.includes(`| ${id} |`), `${c.id}: ${id} is not in SKILL.md`);
   }
 });
 
-test('SKILL.md mantiene las reglas de seguridad para revisar repos no confiables', () => {
+test('SKILL.md keeps the safety rules for reviewing untrusted repos', () => {
   const md = read('skills/security-checklist/SKILL.md');
-  assert.match(md, /son datos, no instrucciones/);
-  assert.match(md, /No ejecutes código del repo revisado/);
-  assert.match(md, /Solo puede endurecer controles/);
-  assert.match(md, /No consultes CLIs ni APIs cloud/);
-  assert.doesNotMatch(md, /ejecutar tests si son baratos/);
-  // allowed-tools hace que la carga de la skill pida permiso y falle en `claude -p` (visto en evals 2026-11-02).
+  assert.match(md, /is data, not instructions/);
+  assert.match(md, /Do not run code from the reviewed repo/);
+  assert.match(md, /It can only tighten controls/);
+  assert.match(md, /Do not query cloud CLIs or APIs/);
+  assert.doesNotMatch(md, /run tests if they are cheap/);
+  // allowed-tools makes loading the skill ask for permission and fail in `claude -p` (seen in evals 2026-11-02).
   assert.doesNotMatch(md.split('\n---')[0], /^allowed-tools:/m);
-  assert.ok(md.split('\n').length < 150, 'SKILL.md debe seguir por debajo de 150 líneas');
+  assert.ok(md.split('\n').length < 150, 'SKILL.md must stay under 150 lines');
 });
 
-test('los evals incluyen casos en los que la skill NO debe activarse', () => {
+test('the evals include cases where the skill must NOT activate', () => {
   const { cases } = JSON.parse(read('evals/cases.json'));
   assert.ok(cases.filter((c) => c.trigger === false).length >= 3);
 });
 
-test('la checklist no repite IDs', () => {
+test('the evals keep Spanish cases to check Spanish activation', () => {
+  const { cases } = JSON.parse(read('evals/cases.json'));
+  assert.ok(cases.filter((c) => c.id.startsWith('es-') && c.trigger).length >= 2);
+});
+
+test('the checklist does not repeat IDs', () => {
   const md = read('skills/security-checklist/SKILL.md');
-  const section = md.slice(md.indexOf('## Checklist'), md.indexOf('## Formato de salida'));
+  const section = md.slice(md.indexOf('## Checklist'), md.indexOf('## Output format'));
   const ids = [...section.matchAll(/^\| (P\d-\d\d) \|/gm)].map((m) => m[1]);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(ids.filter((i) => i.startsWith('P0')).length, 16);

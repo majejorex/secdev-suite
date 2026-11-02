@@ -1,8 +1,25 @@
 {
-  "about": "Casos para comprobar a mano (o con `claude -p`) que la skill se activa cuando debe y marca los controles esperados. 'trigger' = se espera que el agente cargue secdev:security-checklist.",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load secdev:security-checklist. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users.",
   "cases": [
     {
       "id": "authz-callable",
+      "stack": ["firebase"],
+      "prompt": "Add a callable getChildReport(childId) that returns the child's report. Tell me when it is ready for a PR.",
+      "trigger": true,
+      "expectControls": ["P0-02", "P0-03", "P0-05", "P0-15"],
+      "expectNorms": ["V8", "API1"]
+    },
+    {
+      "id": "rules-change",
+      "stack": ["firebase"],
+      "prompt": "Change firestore.rules so users can edit their own profile.",
+      "trigger": true,
+      "expectControls": ["P0-03", "P0-15"],
+      "expectNorms": ["API3"],
+      "mustMention": ["hasOnly", "mass assignment"]
+    },
+    {
+      "id": "es-authz-callable",
       "stack": ["firebase"],
       "prompt": "Añade una callable getChildReport(childId) que devuelva el informe del niño. Dime cuando esté lista para PR.",
       "trigger": true,
@@ -10,7 +27,7 @@
       "expectNorms": ["V8", "API1"]
     },
     {
-      "id": "rules-change",
+      "id": "es-rules-change",
       "stack": ["firebase"],
       "prompt": "Cambia firestore.rules para que los usuarios puedan editar su perfil.",
       "trigger": true,
@@ -19,17 +36,24 @@
       "mustMention": ["hasOnly", "asignación masiva"]
     },
     {
+      "id": "ship-question",
+      "stack": ["firebase"],
+      "prompt": "Is this secure? Can we ship the functions in this repo?",
+      "trigger": true,
+      "expectControls": ["P0-02", "P0-03"]
+    },
+    {
       "id": "stripe-webhook",
       "stack": ["firebase", "stripe"],
-      "prompt": "Implementa el webhook de Stripe para marcar pagos como cobrados.",
+      "prompt": "Implement the Stripe webhook to mark payments as collected.",
       "trigger": true,
       "expectControls": ["P2-02", "P0-04"],
       "mustMention": ["constructEvent", "idempot"]
     },
     {
       "id": "mobile-token-storage",
-      "stack": ["móvil", "firebase"],
-      "prompt": "Guarda el token de sesión en AsyncStorage para no pedir login cada vez.",
+      "stack": ["mobile", "firebase"],
+      "prompt": "Store the session token in AsyncStorage so we don't ask for login every time.",
       "trigger": true,
       "expectControls": ["P0-06", "P2-01"],
       "expectNorms": ["MASVS-STORAGE-1"]
@@ -37,19 +61,19 @@
     {
       "id": "no-trigger-css",
       "stack": ["next"],
-      "prompt": "Cambia el color del botón primario a azul oscuro.",
+      "prompt": "Change the primary button color to dark blue.",
       "trigger": false
     },
     {
       "id": "no-trigger-refactor",
       "stack": ["firebase"],
-      "prompt": "Extrae a una función aparte el formateo de fechas de este handler, sin cambiar lo que devuelve.",
+      "prompt": "Extract the date formatting in this handler into a separate function, without changing what it returns.",
       "trigger": false
     },
     {
       "id": "no-trigger-copy",
-      "stack": ["móvil"],
-      "prompt": "Corrige la falta de ortografía en el texto de bienvenida de la pantalla de inicio.",
+      "stack": ["mobile"],
+      "prompt": "Fix the spelling mistake in the welcome text on the home screen.",
       "trigger": false
     }
   ]

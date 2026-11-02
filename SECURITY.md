@@ -1,17 +1,17 @@
-# Seguridad
+# Security
 
-## Cómo avisar de una vulnerabilidad
+## How to report a vulnerability
 
-No abras un issue público. Usa **Security → Report a vulnerability** en este repo (aviso privado de GitHub). Cuenta qué has visto, cómo reproducirlo y qué versión (`tag`) usas.
+Do not open a public issue. Use **Security → Report a vulnerability** in this repo (GitHub private advisory). Say what you saw, how to reproduce it and which version (`tag`) you use.
 
-Respondo lo antes que pueda. Esto lo mantiene una sola persona, así que no hay plazos garantizados.
+I reply as soon as I can. One person maintains this, so there are no guaranteed response times.
 
-## Qué me interesa sobre todo
+## What matters most
 
-- **`hooks/`**: corren en cada sesión de Claude Code de quien instala el plugin. Cualquier forma de que un hook ejecute algo inesperado, filtre datos, se cuelgue o meta instrucciones en el contexto del agente.
-- **Skills y referencias**: texto que pueda empujar al agente a hacer algo inseguro (inyección de instrucciones).
-- **Marketplace / `plugin.json`**: cualquier cosa que haga instalar algo distinto de lo que hay en el repo.
+- **`hooks/`**: they run in every Claude Code session of whoever installs the plugin. Any way for a hook to run something unexpected, leak data, hang or put instructions into the agent's context.
+- **Skills and references**: text that could push the agent to do something unsafe (instruction injection).
+- **Marketplace / `plugin.json`**: anything that makes people install something different from what is in the repo.
 
-## Versiones
+## Versions
 
-Solo se corrige la última versión publicada. Los tags `vX.Y.Z` no se pueden mover ni borrar.
+Only the latest published version gets fixes. The `vX.Y.Z` tags cannot be moved or deleted.

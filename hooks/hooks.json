@@ -1,5 +1,5 @@
 {
-  "description": "secdev: detecta el stack al abrir sesión y recuerda la checklist de seguridad tras editar algo de riesgo",
+  "description": "secdev: detects the stack when a session opens and reminds you of the security checklist after a risky edit",
   "hooks": {
     "SessionStart": [
       {

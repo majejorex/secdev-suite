@@ -1,5 +1,5 @@
-// PostToolUse (Edit|Write|MultiEdit|NotebookEdit): si la edición toca algo de riesgo, recuerda la
-// skill secdev:security-checklist. Avisa, no bloquea. Una vez por sesión. Nunca falla (exit 0 siempre).
+// PostToolUse (Edit|Write|MultiEdit|NotebookEdit): if the edit touches something risky, reminds
+// the secdev:security-checklist skill. Warns, never blocks. Once per session. Never fails (always exit 0).
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,7 +11,7 @@ try {
   const msg = message(classify(ti.file_path ?? ti.notebook_path, editedText(ti)));
   if (msg) {
     const sid = safeSessionId(input.session_id);
-    // shortcut: un fichero vacío por sesión en el temporal y nunca se limpia; si molesta, borrar los de más de 7 días aquí.
+    // shortcut: one empty file per session in the temp dir, never cleaned up; if it becomes a nuisance, delete files older than 7 days here.
     const dir = join(tmpdir(), 'secdev-sessions');
     const flag = sid ? join(dir, `${sid}.reminded`) : null;
     if (!flag || !existsSync(flag)) {
@@ -23,6 +23,6 @@ try {
     }
   }
 } catch {
-  // silencio ante cualquier error (stdin vacío, JSON roto, temporal sin permisos)
+  // stay silent on any error (empty stdin, broken JSON, temp dir without permissions)
 }
 process.exit(0);

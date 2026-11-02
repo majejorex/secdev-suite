@@ -1,11 +1,11 @@
 version: 2
 updates:
-  # Mantiene al día los SHA fijados en .github/workflows (y su comentario de versión).
+  # Keeps the SHAs pinned in .github/workflows up to date (and their version comment).
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    # No propone una versión hasta que lleve 7 días publicada: margen ante una release comprometida.
+    # Does not propose a version until it has been published for 7 days: a margin against a compromised release.
     cooldown:
       default-days: 7
     commit-message:

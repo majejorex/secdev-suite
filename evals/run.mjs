@@ -1,6 +1,6 @@
-// Ejecuta evals/cases.json con `claude -p --plugin-dir <este repo>` en proyectos ficticios.
-// Uso: node evals/run.mjs <carpeta-de-salida, fuera del repo> [modelo] [id1,id2…]
-// Cuesta dinero (≈0,5 $ por caso con Opus): no forma parte de `npm test`.
+// Runs evals/cases.json with `claude -p --plugin-dir <this repo>` in fictitious projects.
+// Usage: node evals/run.mjs <output folder, outside the repo> [model] [id1,id2…]
+// It costs money (about $0.50 per case with Opus): it is not part of `npm test`.
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const suite = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const [outArg, model = '', only = ''] = process.argv.slice(2);
 if (!outArg) {
-  console.error('Uso: node evals/run.mjs <carpeta-de-salida> [modelo] [id1,id2]');
+  console.error('Usage: node evals/run.mjs <output-folder> [model] [id1,id2]');
   process.exit(2);
 }
 const outDir = resolve(outArg);
@@ -26,15 +26,15 @@ const FIX = {
     'functions/src/index.ts': "import { onCall, HttpsError } from 'firebase-functions/v2/https';\nimport { getFirestore } from 'firebase-admin/firestore';\n\nexport const ping = onCall(async (req) => {\n  if (!req.auth) throw new HttpsError('unauthenticated', 'login');\n  return { ok: true };\n});\n",
   },
   stripe: { 'functions/package.json': { dependencies: { 'firebase-functions': '^6.0.0', 'firebase-admin': '^13.0.0', stripe: '^17.0.0' } } },
-  'móvil': {
+  mobile: {
     'package.json': { dependencies: { expo: '~52.0.0', 'react-native': '0.76.0', firebase: '^11.0.0', '@react-native-async-storage/async-storage': '2.1.0' } },
     'app.json': { expo: { name: 'demo', slug: 'demo' } },
     'src/auth/session.ts': "import AsyncStorage from '@react-native-async-storage/async-storage';\n\nexport async function login(email: string, password: string) {\n  const res = await fetch('https://api.example.com/login', { method: 'POST', body: JSON.stringify({ email, password }) });\n  return res.json() as Promise<{ token: string }>;\n}\n",
-    'src/screens/Welcome.tsx': "import { Text } from 'react-native';\nexport default function Welcome() { return <Text>Bienvenido a la aplicacion, empiza aqui.</Text>; }\n",
+    'src/screens/Welcome.tsx': "import { Text } from 'react-native';\nexport default function Welcome() { return <Text>Welcome to the app, start here.</Text>; }\n",
   },
   next: {
     'package.json': { dependencies: { next: '15.0.0', react: '19.0.0' } },
-    'app/page.tsx': "export default function Page() { return <button className=\"btn-primary\">Entrar</button>; }\n",
+    'app/page.tsx': "export default function Page() { return <button className=\"btn-primary\">Sign in</button>; }\n",
     'app/globals.css': '.btn-primary { background: #3b82f6; color: white; }\n',
   },
 };
@@ -56,7 +56,7 @@ function run(c) {
     const args = ['-p', c.prompt, '--plugin-dir', suite, '--output-format', 'stream-json', '--verbose',
       '--max-budget-usd', '1.5', '--permission-mode', 'acceptEdits'];
     if (model) args.push('--model', model);
-    const p = spawn('claude', args, { cwd: dir }); // claude.exe nativo: sin shell, los prompts llegan sin re-escapar
+    const p = spawn('claude', args, { cwd: dir }); // native claude.exe: no shell, so prompts arrive without re-escaping
     p.stdin.end();
     let raw = '';
     p.stdout.on('data', (d) => (raw += d));
@@ -66,9 +66,9 @@ function run(c) {
       clearTimeout(timer);
       writeFileSync(join(outDir, `${c.id}.jsonl`), raw);
       const skills = [];
-      const skillCalls = new Set(); // ids de llamadas a esta skill, para saber si cargó sin error
+      const skillCalls = new Set(); // ids of calls to this skill, to know whether it loaded without error
       let loaded = false;
-      const pending = new Map(); // tool_use id → ruta, para lecturas dentro del plugin
+      const pending = new Map(); // tool_use id → path, for reads inside the plugin
       let refErrors = 0;
       let finalText = '';
       let cost = null;
@@ -90,17 +90,18 @@ function run(c) {
         if (m.type === 'result') { finalText = m.result ?? ''; cost = m.total_cost_usd; }
       }
       const triggered = skills.some((s) => String(s).includes('security-checklist'));
-      const hookSeen = raw.includes('[secdev] Stack detectado');
-      // El stream de `claude -p` no muestra la salida de PostToolUse: el aviso se detecta por el
-      // fichero de control que deja hooks/post-edit.mjs para esa sesión.
+      const hookSeen = /[secdev] (Stack detectado|Detected stack|Stack detected)/.test(raw);
+      // The `claude -p` stream does not show PostToolUse output: the reminder is detected through the
+      // control file that hooks/post-edit.mjs leaves for that session.
       const sid = (raw.match(/"session_id":"([A-Za-z0-9_-]+)"/) ?? [])[1];
       const editReminder = Boolean(sid) && existsSync(join(tmpdir(), 'secdev-sessions', `${sid}.reminded`));
       const missing = (c.mustMention ?? []).filter((w) => !finalText.toLowerCase().includes(w.toLowerCase()));
       const controls = (c.expectControls ?? []).filter((id) => !finalText.includes(id));
-      // Coherencia: con alguna fila P0 en ❌ el veredicto tiene que ser BLOQUEA.
-      const verdict = (finalText.match(/Veredicto:\**\s*\**\s*(BLOQUEA|PASA CON PENDIENTES|PASA)/i) ?? [])[1]?.toUpperCase() ?? null;
+      // Consistency: with any P0 row at ❌ the verdict must be BLOCK (BLOQUEA in Spanish answers).
+      const verdictRaw = (finalText.match(/(?:Verdict|Veredicto):\**\s*\**\s*(BLOCK|PASS WITH ISSUES|PASS|BLOQUEA|PASA CON PENDIENTES|PASA)/i) ?? [])[1]?.toUpperCase() ?? null;
+      const verdict = { BLOQUEA: 'BLOCK', 'PASA CON PENDIENTES': 'PASS WITH ISSUES', PASA: 'PASS' }[verdictRaw] ?? verdictRaw;
       const p0Fail = /^\|\s*P0-\d\d\s*\|[^\n]*\|\s*❌\s*\|/m.test(finalText);
-      const verdictOk = !c.trigger || (verdict !== null && (!p0Fail || verdict === 'BLOQUEA'));
+      const verdictOk = !c.trigger || (verdict !== null && (!p0Fail || verdict === 'BLOCK'));
       const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk));
       resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
     });
@@ -110,5 +111,5 @@ function run(c) {
 mkdirSync(outDir, { recursive: true });
 const results = await Promise.all(cases.map(run));
 writeFileSync(join(outDir, 'results.json'), JSON.stringify(results, null, 2));
-for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${r.id.padEnd(22)} esperado=${r.expected} activó=${r.triggered} cargó=${r.loaded} veredicto=${r.verdict}${r.verdictOk ? '' : '(INCOHERENTE)'} hook=${r.hookSeen} aviso=${r.editReminder} lecturasRef=${r.refReads} erroresRef=${r.refErrors} coste=${r.cost} faltanCtrl=${JSON.stringify(r.missingControls)} faltanMenc=${JSON.stringify(r.missingMentions)}`);
+for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${r.id.padEnd(22)} expected=${r.expected} triggered=${r.triggered} loaded=${r.loaded} verdict=${r.verdict}${r.verdictOk ? '' : '(INCONSISTENT)'} hook=${r.hookSeen} reminder=${r.editReminder} refReads=${r.refReads} refErrors=${r.refErrors} cost=${r.cost} missingControls=${JSON.stringify(r.missingControls)} missingMentions=${JSON.stringify(r.missingMentions)}`);
 process.exit(results.every((r) => r.ok) ? 0 : 1);

@@ -1,17 +1,17 @@
-// Detección de stack para el hook SessionStart. Sin efectos: lo prueba hooks/stack.test.mjs.
+// Stack detection for the SessionStart hook. No side effects: hooks/stack.test.mjs tests it.
 import { lstatSync, readFileSync, opendirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const MAX_CHILD_DIRS = 30;
 const MAX_PACKAGE_JSON_BYTES = 1_000_000;
 
-// Señal → etiqueta. `files` son rutas relativas que delatan el stack; `deps` se busca en package.json.
-// Para móvil se usan ficheros concretos, no carpetas `android`/`ios`: Windows no distingue mayúsculas
-// y «C:\Program Files\Android» daba falsos positivos.
+// Signal → tag. `files` are relative paths that reveal the stack; `deps` are looked up in package.json.
+// For mobile it uses specific files, not `android`/`ios` folders: Windows is case-insensitive
+// and "C:\Program Files\Android" gave false positives.
 const RULES = [
   { tag: 'firebase', files: ['firebase.json', 'firestore.rules', 'storage.rules'], deps: ['firebase', 'firebase-admin', 'firebase-functions'] },
   { tag: 'supabase', files: ['supabase/config.toml'], deps: ['@supabase/supabase-js'] },
-  { tag: 'móvil', files: ['android/app/build.gradle', 'android/app/build.gradle.kts', 'ios/Podfile'], deps: ['expo', 'react-native'] },
+  { tag: 'mobile', files: ['android/app/build.gradle', 'android/app/build.gradle.kts', 'ios/Podfile'], deps: ['expo', 'react-native'] },
   { tag: 'stripe', deps: ['stripe', '@stripe/stripe-js', '@stripe/stripe-react-native'] },
   { tag: 'next', deps: ['next'] },
   { tag: 'api', deps: ['express', 'fastify', 'hono', 'koa', '@nestjs/core'] },
@@ -20,8 +20,8 @@ const RULES = [
   { tag: 'docker', files: ['Dockerfile', 'docker-compose.yml', 'compose.yaml'] },
 ];
 
-// Nunca se siguen enlaces: un repo clonado podría apuntar firebase.json o package.json a una ruta UNC
-// (\\host\share), y tocarla haría que Windows enviara el hash NTLM del usuario.
+// Links are never followed: a cloned repo could point firebase.json or package.json at a UNC path
+// (\\host\share), and touching it would make Windows send the user's NTLM hash.
 function lstatOrNull(p) {
   try {
     return lstatSync(p, { throwIfNoEntry: false }) ?? null;
@@ -58,7 +58,7 @@ function detectIn(dir) {
   return tags;
 }
 
-// Hasta MAX_CHILD_DIRS subcarpetas visibles, sin listar la carpeta entera (Descargas, cachés…).
+// Up to MAX_CHILD_DIRS visible subfolders, without listing the whole folder (Downloads, caches...).
 function childDirs(root) {
   const out = [];
   let dir;
@@ -69,14 +69,14 @@ function childDirs(root) {
       if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') out.push(join(root, entry.name));
     }
   } catch {
-    // carpeta inexistente o sin permiso: sin hijos
+    // missing folder or no permission: no children
   } finally {
-    try { dir?.closeSync(); } catch { /* ya cerrada */ }
+    try { dir?.closeSync(); } catch { /* already closed */ }
   }
   return out;
 }
 
-// La raíz y sus hijos directos: cubre workspaces con varios repos, monorepos (apps/*) y `functions/`.
+// The root and its direct children: covers workspaces with several repos, monorepos (apps/*) and `functions/`.
 export function detectStack(root) {
   const tags = detectIn(root);
   for (const child of childDirs(root)) for (const t of detectIn(child)) tags.add(t);
@@ -86,14 +86,14 @@ export function detectStack(root) {
 export function standardsFor(tags) {
   const s = ['ASVS 5.0'];
   if (tags.some((t) => ['firebase', 'supabase', 'api', 'next', 'stripe'].includes(t))) s.push('API Security Top 10 2023');
-  if (tags.includes('móvil')) s.push('MASVS 2.1');
+  if (tags.includes('mobile')) s.push('MASVS 2.1');
   return s;
 }
 
 export function render(tags) {
   if (tags.length === 0) return '';
   return [
-    `[secdev] Stack detectado: ${tags.join(', ')}. Normas aplicables: ${standardsFor(tags).join(' + ')}.`,
-    '[secdev] Al diseñar o antes de dar por terminado algo que toque auth, roles, datos de usuario, pagos, subidas, secretos o reglas de acceso, carga la skill secdev:security-checklist.',
+    `[secdev] Detected stack: ${tags.join(', ')}. Applicable standards: ${standardsFor(tags).join(' + ')}.`,
+    '[secdev] When designing, or before calling done anything that touches auth, roles, user data, payments, uploads, secrets or access rules, load the secdev:security-checklist skill.',
   ].join('\n');
 }

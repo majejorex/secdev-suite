@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 380" width="880" height="380" role="img" aria-label="Cómo funciona: al abrir sesión el hook SessionStart detecta el stack; al editar algo de riesgo el hook PostToolUse avisa una vez; antes de terminar la skill security-checklist revisa control a control. Veredictos: BLOQUEA si hay un P0 sin cumplir, PASA CON PENDIENTES si falta verificar algo o falla un P1/P2, PASA si todo cumple o no aplica.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 380" width="880" height="380" role="img" aria-label="How it works: when a session starts, the SessionStart hook detects the stack; when you edit something risky, the PostToolUse hook warns once; before you finish, the security-checklist skill reviews control by control. Verdicts: BLOCK if a P0 fails, PASS WITH ISSUES if something cannot be verified or a P1/P2 fails, PASS if everything is met or justified as N/A.">
   <style>
     .s { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
     .m { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
@@ -11,53 +11,53 @@
   <rect width="880" height="380" rx="14" fill="#0b1220"/>
   <rect x=".5" y=".5" width="879" height="379" rx="14" fill="none" stroke="#30363d"/>
 
-  <!-- tres pasos -->
+  <!-- three steps -->
   <g class="s">
     <rect x="24" y="24" width="256" height="180" rx="12" fill="#111827" stroke="#30363d"/>
-    <text x="44" y="56" class="n">1 · ABRES SESIÓN</text>
-    <text x="44" y="86" class="t">Detecta el stack</text>
+    <text x="44" y="56" class="n">1 · SESSION STARTS</text>
+    <text x="44" y="86" class="t">Detects the stack</text>
     <text x="44" y="110" class="m c">hook SessionStart</text>
-    <text x="44" y="142" class="d">Firebase, Supabase, móvil,</text>
+    <text x="44" y="142" class="d">Firebase, Supabase, mobile,</text>
     <text x="44" y="162" class="d">Stripe, Next, API, LLM…</text>
-    <text x="44" y="182" class="d">y dice qué normas aplican.</text>
+    <text x="44" y="182" class="d">and names the standards.</text>
 
     <rect x="312" y="24" width="256" height="180" rx="12" fill="#111827" stroke="#30363d"/>
-    <text x="332" y="56" class="n">2 · EDITAS ALGO DE RIESGO</text>
-    <text x="332" y="86" class="t">Avisa una vez</text>
+    <text x="332" y="56" class="n">2 · RISKY EDIT</text>
+    <text x="332" y="86" class="t">Warns once</text>
     <text x="332" y="110" class="m c">hook PostToolUse</text>
-    <text x="332" y="142" class="d">Auth, roles, pagos, reglas,</text>
-    <text x="332" y="162" class="d">secretos, subidas, CORS…</text>
-    <text x="332" y="182" class="d">Nunca bloquea.</text>
+    <text x="332" y="142" class="d">Auth, roles, payments, rules,</text>
+    <text x="332" y="162" class="d">secrets, uploads, CORS…</text>
+    <text x="332" y="182" class="d">Never blocks.</text>
 
     <rect x="600" y="24" width="256" height="180" rx="12" fill="#111827" stroke="#10b981" stroke-opacity=".6"/>
-    <text x="620" y="56" class="n">3 · ANTES DE TERMINAR</text>
-    <text x="620" y="86" class="t">Revisa con evidencia</text>
+    <text x="620" y="56" class="n">3 · BEFORE DONE</text>
+    <text x="620" y="86" class="t">Reviews with evidence</text>
     <text x="620" y="110" class="m c">secdev:security-checklist</text>
-    <text x="620" y="142" class="d">P0 / P1 / P2 control a control,</text>
-    <text x="620" y="162" class="d">cada uno con fichero:línea.</text>
-    <text x="620" y="182" class="d">Sin evidencia no hay ✓.</text>
+    <text x="620" y="142" class="d">P0 / P1 / P2, one control</text>
+    <text x="620" y="162" class="d">at a time, each with file:line.</text>
+    <text x="620" y="182" class="d">No evidence, no ✓.</text>
   </g>
 
-  <!-- flechas -->
+  <!-- arrows -->
   <path d="M284 114 H306 M300 108 L306 114 L300 120" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M572 114 H594 M588 108 L594 114 L588 120" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- veredictos -->
-  <text x="24" y="246" class="s" style="font-size:13px;font-weight:700;fill:#7d8590;letter-spacing:.08em">VEREDICTO</text>
+  <!-- verdicts -->
+  <text x="24" y="246" class="s" style="font-size:13px;font-weight:700;fill:#7d8590;letter-spacing:.08em">VERDICT</text>
   <g class="s">
     <rect x="24" y="262" width="256" height="92" rx="12" fill="#f85149" fill-opacity=".1" stroke="#f85149" stroke-opacity=".7"/>
-    <text x="44" y="294" class="v" fill="#ff7b72">BLOQUEA</text>
-    <text x="44" y="320" class="d">Algún P0 aplicable no se cumple.</text>
-    <text x="44" y="340" class="d">No se publica.</text>
+    <text x="44" y="294" class="v" fill="#ff7b72">BLOCK</text>
+    <text x="44" y="320" class="d">An applicable P0 is not met.</text>
+    <text x="44" y="340" class="d">Do not release.</text>
 
     <rect x="312" y="262" width="256" height="92" rx="12" fill="#d29922" fill-opacity=".1" stroke="#d29922" stroke-opacity=".7"/>
-    <text x="332" y="294" class="v" fill="#e3b341">PASA CON PENDIENTES</text>
-    <text x="332" y="320" class="d">Algo no se puede verificar desde</text>
-    <text x="332" y="340" class="d">el código, o falla un P1 / P2.</text>
+    <text x="332" y="294" class="v" fill="#e3b341">PASS WITH ISSUES</text>
+    <text x="332" y="320" class="d">Something cannot be verified</text>
+    <text x="332" y="340" class="d">from the code, or a P1 / P2 fails.</text>
 
     <rect x="600" y="262" width="256" height="92" rx="12" fill="#3fb950" fill-opacity=".1" stroke="#3fb950" stroke-opacity=".7"/>
-    <text x="620" y="294" class="v" fill="#56d364">PASA</text>
-    <text x="620" y="320" class="d">Todo lo aplicable cumple,</text>
-    <text x="620" y="340" class="d">o su N/A está justificado.</text>
+    <text x="620" y="294" class="v" fill="#56d364">PASS</text>
+    <text x="620" y="320" class="d">Everything that applies is met</text>
+    <text x="620" y="340" class="d">or justified as N/A.</text>
   </g>
 </svg>

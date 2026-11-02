@@ -1,9 +1,9 @@
-// Recogida de inteligencia de amenazas. Lista cerrada de fuentes; todo lo que llega se guarda como datos.
-// Sin LLM y sin dependencias: el agente lo lee después, a petición de la persona (skill intel-review).
+// Threat intelligence collection. Closed list of sources; everything that comes in is stored as data.
+// No LLM and no dependencies: the agent reads it later, when the user asks (intel-review skill).
 
 export const GHSA_ECOSYSTEMS = ['npm', 'pip', 'maven', 'pub', 'swift', 'actions'];
 
-// Paquetes del stack habitual: sus avisos entran aunque sean de severidad media. Acabados en / o : son prefijos.
+// Packages of the usual stack: their advisories are included even at medium severity. Names ending in / or : are prefixes.
 export const WATCH = {
   npm: ['firebase', 'firebase-admin', 'firebase-functions', '@firebase/', '@supabase/', 'stripe', '@stripe/', 'next',
     'react', 'react-dom', 'react-native', 'expo', 'express', 'jsonwebtoken', 'jose', 'axios', 'multer',
@@ -14,7 +14,7 @@ export const WATCH = {
   pub: ['firebase_core', 'firebase_auth', 'cloud_firestore', 'supabase_flutter'],
 };
 
-// Rutas que cita references/: si cambian, toca volver a comprobar IDs y títulos (regla OWASP del repo).
+// Paths that references/ cites: if they change, IDs and titles must be checked again (the repo OWASP rule).
 export const NORMS = [
   { id: 'asvs', repo: 'OWASP/ASVS', path: '5.0/en' },
   { id: 'api-top10', repo: 'OWASP/API-Security', path: 'editions/2023/en' },
@@ -42,11 +42,11 @@ const TIMEOUT_MS = 20000;
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
-// Texto de internet: sin etiquetas ni caracteres de control, y corto. Sigue siendo dato no confiable.
+// Text from the internet: no tags, no control characters, and short. It is still untrusted data.
 export function clean(s, max = 200) {
   if (typeof s !== 'string') return '';
   const t = s
-    .slice(0, max * 4 + 1000) // acota el coste de las regex de abajo ante textos hostiles
+    .slice(0, max * 4 + 1000) // bounds the cost of the regexes below against hostile text
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
     .replace(/<[^>]*>/g, ' ')
     .replace(/&(#x[0-9a-f]+|#\d+|\w+);/gi, (m, e) => {
@@ -56,10 +56,10 @@ export function clean(s, max = 200) {
       }
       return ENTITIES[e.toLowerCase()] ?? m;
     })
-    // Control, formato (bidi, ancho cero, etiquetas Unicode E0000), uso privado, sin asignar y selectores de variante:
-    // así no se esconde texto que el humano no ve y el agente sí lee.
+    // Control, format (bidi, zero width, Unicode tag characters E0000), private use, unassigned and variation selectors:
+    // so no text hides from the human that the agent still reads.
     .replace(/[\p{Cc}\p{Cf}\p{Co}\p{Cn}\u{FE00}-\u{FE0F}\u{E0100}-\u{E01EF}]/gu, ' ')
-    .replace(/<(?=[a-z/!?])/gi, '‹') // una entidad decodificada no puede volver a parecer una etiqueta
+    .replace(/<(?=[a-z/!?])/gi, '‹') // a decoded entity must not look like a tag again
     .replace(/\s+/g, ' ')
     .trim();
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
@@ -69,10 +69,10 @@ export const httpUrl = (u) => (typeof u === 'string' && /^https?:\/\/[^\s"<>]+$/
 
 const isoDay = (d) => (d instanceof Date && !Number.isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : null);
 
-// Feeds hostiles: todo el análisis va con indexOf, en tiempo lineal. Las regex perezosas eran cuadráticas.
+// Hostile feeds: all parsing uses indexOf, in linear time. Lazy regexes were quadratic.
 const MAX_BLOCK = 50_000;
 
-// Contenido de la primera <name ...>…</name>, o undefined.
+// Content of the first <name ...>…</name>, or undefined.
 function inner(block, name) {
   const open = block.indexOf(`<${name}`);
   if (open < 0) return undefined;
@@ -82,7 +82,7 @@ function inner(block, name) {
   return close < 0 ? undefined : block.slice(gt + 1, close);
 }
 
-// href del primer <link> sin rel o con rel="alternate" (Atom).
+// href of the first <link> with no rel or with rel="alternate" (Atom).
 function atomHref(block) {
   for (let i = block.indexOf('<link'); i >= 0; i = block.indexOf('<link', i + 1)) {
     const gt = block.indexOf('>', i);
@@ -110,7 +110,7 @@ export function parseFeed(xml, source, since) {
   return out;
 }
 
-// Solo se sigue la paginación dentro de la API de GitHub: es el único sitio al que va el token.
+// Pagination is followed only inside the GitHub API: it is the only place the token goes to.
 export function nextLink(header) {
   const n = header?.match(/<([^>]+)>;\s*rel="next"/)?.[1];
   try {
@@ -174,7 +174,7 @@ export function summarize(items, norms) {
 
 async function get(url, headers = {}) {
   const res = await fetch(url, { headers: { 'User-Agent': 'secdev-suite-intel', ...headers }, signal: AbortSignal.timeout(TIMEOUT_MS) });
-  if (!res.ok) throw new Error(`HTTP ${res.status} en ${new URL(url).host}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} at ${new URL(url).host}`);
   return res;
 }
 
@@ -185,7 +185,7 @@ export async function fetchKev(since) {
   return vulnerabilities.filter((v) => v.dateAdded >= since).map(normalizeKev);
 }
 
-// Un fallo (límite de peticiones, timeout) corta solo esta consulta y conserva las páginas ya leídas.
+// A failure (rate limit, timeout) stops only this query and keeps the pages already read.
 async function ghsaQuery(params, token, onError) {
   let url = `https://api.github.com/advisories?type=reviewed&per_page=100&${new URLSearchParams(params)}`;
   const out = [];
@@ -196,7 +196,7 @@ async function ghsaQuery(params, token, onError) {
       url = nextLink(res.headers.get('link'));
     }
   } catch (e) {
-    onError(`ghsa:${params.ecosystem}/${params.severity ?? 'vigilados'}`, e);
+    onError(`ghsa:${params.ecosystem}/${params.severity ?? 'watched'}`, e);
   }
   return out;
 }
@@ -210,7 +210,7 @@ export async function fetchGhsa(since, token, onError) {
   for (const q of queries) {
     for (const a of await ghsaQuery(q, token, onError)) {
       const n = normalizeGhsa(a);
-      // La consulta sin severidad solo aporta lo vigilado; lo demás de severidad media es ruido aquí.
+      // The query without severity only contributes watched packages; the rest at medium severity is noise here.
       if (!seen.has(n.id) && (q.severity || n.watched)) seen.set(n.id, n);
     }
   }
