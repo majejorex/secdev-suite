@@ -57,7 +57,7 @@ To develop without installing: `claude --plugin-dir /path/to/secdev-suite`.
 
 ### 1 · `SessionStart` hook: detects the stack
 
-It looks for Firebase, Supabase, mobile, Stripe, Next, API frameworks, LLM SDKs, Python and Docker in the project root and its direct subfolders.
+It looks for Firebase, Supabase, mobile (Expo, React Native, Capacitor), desktop (Electron, Tauri), Stripe, Next, API frameworks, LLM SDKs, Python and Docker in the project root and its direct subfolders.
 
 - If it finds any, it injects two fixed lines with the applicable standards and a reminder about the skill. It never prints repo content.
 - If it finds nothing, it prints nothing.
@@ -67,7 +67,8 @@ It looks for Firebase, Supabase, mobile, Stripe, Next, API frameworks, LLM SDKs,
 
 It runs on Edit, Write, MultiEdit and NotebookEdit. If an edit touches something risky, it reminds the agent to load the checklist before calling the task done.
 
-- It decides from the file path (access rules, `.env`, keys, headers) or from the written text: auth, roles, endpoints, payments, client-side tokens, uploads, secrets, CORS, execution with external data, and LLM calls.
+- It decides from the file path (access rules, `.env`, keys and keystores, headers, desktop packaging) or from the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, and app signing and updates.
+- Next to each category it names the checklist controls to look at first, for example `file uploads (P0-14)`.
 - It warns at most once per session and never blocks.
 - It only names categories from a fixed list, never text from the repo.
 - It ignores docs, styles, images and lockfiles.
@@ -90,11 +91,13 @@ It reviews a change, a feature or a whole repo.
 
 <br>
 
-**P0, blocks a release:** authentication (password hashing and reset links included), server-side authorization (admin routes included), isolation between users or tenants, secrets (git history included), input validation, sessions, HTTPS, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain.
+**P0, blocks a release:** authentication (password hashing, reset links and re-authentication for sensitive changes included), server-side authorization (admin routes included), isolation between users or tenants, secrets (git history included), input validation, sessions, HTTPS with TLS 1.2 or later, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain.
 
 **P1, process:** protected repos, automated scanning, dependencies, deployments, logging and audit trails, alerts, backups with a tested restore, incident response and periodic reviews.
 
-**P2, depending on the feature:** mobile, payments, GDPR (no trackers before consent), AI and LLMs, third-party integrations and secure design.
+**P2, depending on the feature:** mobile (signed releases and updates included), payments, GDPR (no trackers before consent, encryption at rest), AI and LLMs, third-party integrations, secure design and desktop apps (Electron, Tauri).
+
+What changed in each version: [docs/features/](docs/features/).
 
 The full list, with how to verify each control and its standard, is in [skills/security-checklist/SKILL.md](skills/security-checklist/SKILL.md).
 

@@ -59,6 +59,14 @@
       "expectNorms": ["MASVS-STORAGE-1"]
     },
     {
+      "id": "desktop-electron-ipc",
+      "stack": ["desktop"],
+      "prompt": "Let the renderer of our Electron app read local files through IPC. Tell me when it can ship.",
+      "trigger": true,
+      "expectControls": ["P2-07"],
+      "mustMention": ["contextIsolation", "sender"]
+    },
+    {
       "id": "no-trigger-css",
       "stack": ["next"],
       "prompt": "Change the primary button color to dark blue.",
