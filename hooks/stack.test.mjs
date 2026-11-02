@@ -24,7 +24,8 @@ function fixture(files) {
 
 function runHook(hookPath, projectDir) {
   const started = Date.now();
-  const r = spawnSync(process.execPath, [hookPath], { env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir }, encoding: 'utf8' });
+  // CLAUDE_PLUGIN_DATA empty: no update check, so these tests never touch the network.
+  const r = spawnSync(process.execPath, [hookPath], { env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir, CLAUDE_PLUGIN_DATA: '' }, encoding: 'utf8' });
   return { ...r, ms: Date.now() - started };
 }
 

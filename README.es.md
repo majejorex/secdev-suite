@@ -64,6 +64,7 @@ Busca Firebase, Supabase, móvil (Expo, React Native, Capacitor), escritorio (El
 - Si encuentra algo, inyecta dos líneas fijas con los estándares aplicables y un recordatorio de la skill. Nunca imprime contenido del repo.
 - Si no encuentra nada, no imprime nada.
 - Nunca falla y no sigue enlaces simbólicos.
+- Una vez al día, en segundo plano, consulta la versión publicada en `main`. Si hay una más nueva, te muestra un aviso con el enlace para revisar qué cambia en `hooks/` y el comando para actualizar (ver «Actualizar con seguridad»).
 
 ### 2 · Hook `PostToolUse`: avisa una vez
 
@@ -117,11 +118,22 @@ No sustituye a una auditoría. Para eso remite a:
 > [!IMPORTANT]
 > Los hooks son código que se ejecuta en todas tus sesiones. Actualizar el plugin significa ejecutar código nuevo en todas partes.
 
-- Desactiva la **actualización automática** de este marketplace en `/plugin` → Marketplaces.
-- Cada release tiene un tag (`v0.1.1`…). Antes de `/plugin marketplace update secdev-suite`, revisa qué cambia en el código que se ejecuta:
+- Desactiva la **actualización automática** de este marketplace en `/plugin` → Marketplaces. secdev te avisa él mismo cuando hay una versión nueva.
+- Cuando se publica una versión nueva, la siguiente sesión muestra un aviso como este (en inglés):
   ```
-  git fetch --tags && git diff <tag-instalado>..origin/main -- hooks/ .claude-plugin/
+  secdev 0.3.4 is available (installed: 0.3.3). Review what changes in hooks/ before updating:
+  https://github.com/majejorex/secdev-suite/compare/v0.3.3...v0.3.4 · Update: claude plugin marketplace
+  update secdev-suite && claude plugin update secdev@secdev-suite, then restart Claude Code.
   ```
+  1. Abre el enlace y lee el diff de `hooks/`: ese código se ejecutará en todas tus sesiones.
+  2. Actualiza con un solo comando (dentro de Claude Code, ponle delante `!`):
+     ```
+     claude plugin marketplace update secdev-suite && claude plugin update secdev@secdev-suite
+     ```
+  3. Reinicia Claude Code.
+- Cómo funciona la comprobación: como mucho una vez al día, un proceso en segundo plano descarga el archivo público `.claude-plugin/plugin.json` de `main` y solo se queda con la versión. No envía nada de tu proyecto y la sesión nunca lo espera. El resultado se guarda en la carpeta de datos del plugin (`CLAUDE_PLUGIN_DATA`).
+- Para desactivarla, define `SECDEV_NO_UPDATE_CHECK=1` en tu entorno.
+- Desde un clon, la misma revisión: `git fetch --tags && git diff <tag-instalado>..origin/main -- hooks/ .claude-plugin/`.
 - Los tags `v*` están protegidos y no se pueden mover ni borrar, así que un diff entre tags es fiable.
 
 ## Tests
