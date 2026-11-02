@@ -1,23 +1,23 @@
-# Contribuir
+# Contributing
 
-Gracias por el interés. El repo lo mantiene una persona, así que las reglas son pocas y estrictas.
+Thanks for your interest. One person maintains this repo, so the rules are few and strict.
 
-## Cómo
+## How
 
-1. Para algo más que una errata, abre antes un issue y cuéntalo. Evita que trabajes en algo que no voy a aceptar.
-2. Haz un fork, una rama, y abre un pull request contra `main`.
-3. `npm test` tiene que pasar (lo ejecuta también la CI). Sin dependencias: solo Node ≥ 20 y `node:test`.
-4. Yo reviso, decido y hago el merge (squash). La versión y los tags los subo yo.
+1. For anything more than a typo, open an issue first and describe it. This saves you from working on something I will not accept.
+2. Fork the repo, create a branch, and open a pull request against `main`.
+3. `npm test` must pass (CI runs it too). No dependencies: only Node ≥ 20 and `node:test`.
+4. I review, decide and merge (squash). I bump the version and push the tags.
 
-Las vulnerabilidades no van por aquí: mira [SECURITY.md](SECURITY.md).
+Vulnerabilities do not go here: see [SECURITY.md](SECURITY.md).
 
-## Reglas del repo
+## Repo rules
 
-Están en [CLAUDE.md](CLAUDE.md). Las que más afectan a un PR:
+They are in [CLAUDE.md](CLAUDE.md). The ones that affect a PR most:
 
-- **Hooks** (`hooks/`): corren en todas las sesiones de quien instala el plugin. Siempre `exit 0`, menos de 1 s, 5 líneas de salida como mucho y silencio si no hay nada que decir. Todo hook nuevo o cambiado lleva test. Son los PR que más miro.
-- **Skills**: `SKILL.md` de menos de 150 líneas; el detalle va en `references/`. Si cambias la `description`, añade un caso en `evals/cases.json`.
-- **OWASP**: IDs y títulos copiados del repo oficial, con la fecha en que los comprobaste. Nunca de memoria. El resto del texto, propio.
-- **Inteligencia de amenazas**: datos fechados y con su fuente, nunca instrucciones para el agente.
+- **Hooks** (`hooks/`): they run in every session of whoever installs the plugin. Always `exit 0`, under 1 s, at most 5 lines of output, and silence if there is nothing to say. Every new or changed hook comes with a test. These are the PRs I look at most closely.
+- **Skills**: `SKILL.md` under 150 lines; details go in `references/`. If you change the `description`, add a case in `evals/cases.json`.
+- **OWASP**: IDs and titles copied from the official repo, with the date you checked them. Never from memory. The rest of the text is our own.
+- **Threat intelligence**: dated data with its source, never instructions for the agent.
 
-No se aceptan PR que añadan dependencias, ejecuten red desde un hook o metan texto que dé órdenes al agente sin que esté claro por qué.
+I do not accept PRs that add dependencies, make network calls from a hook, or add text that gives orders to the agent without a clear reason.

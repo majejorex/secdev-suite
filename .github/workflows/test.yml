@@ -16,5 +16,5 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # Node ya viene en el runner (>=20) y no hay dependencias que instalar.
+      # Node is already on the runner (>=20) and there are no dependencies to install.
       - run: node --version && npm test

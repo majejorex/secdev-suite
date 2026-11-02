@@ -33,29 +33,29 @@ const FIREBASE_APP = {
   'firestore.rules': '',
 };
 
-test('detecta firebase + móvil + stripe en un repo Expo', () => {
-  assert.deepEqual(detectStack(fixture(FIREBASE_APP)), ['firebase', 'móvil', 'stripe']);
+test('detects firebase + mobile + stripe in an Expo repo', () => {
+  assert.deepEqual(detectStack(fixture(FIREBASE_APP)), ['firebase', 'mobile', 'stripe']);
 });
 
-test('carpeta sin proyecto ni hijos relevantes: vacío y sin salida', () => {
-  assert.deepEqual(detectStack(fixture({ 'notas.txt': 'hola' })), []);
+test('folder with no project or relevant children: empty and no output', () => {
+  assert.deepEqual(detectStack(fixture({ 'notes.txt': 'hello' })), []);
   assert.equal(render([]), '');
 });
 
-test('package.json roto no lanza', () => {
-  assert.deepEqual(detectStack(fixture({ 'package.json': '{ esto no es json' })), []);
+test('broken package.json does not throw', () => {
+  assert.deepEqual(detectStack(fixture({ 'package.json': '{ this is not json' })), []);
 });
 
-test('raíz de workspace: agrega los repos hijos e ignora node_modules', () => {
+test('workspace root: aggregates child repos and ignores node_modules', () => {
   const dir = fixture({
     'app/package.json': JSON.stringify({ dependencies: { 'react-native': '1' } }),
     'web/package.json': JSON.stringify({ dependencies: { next: '1' } }),
     'node_modules/x/package.json': JSON.stringify({ dependencies: { openai: '1' } }),
   });
-  assert.deepEqual(detectStack(dir), ['móvil', 'next']);
+  assert.deepEqual(detectStack(dir), ['mobile', 'next']);
 });
 
-test('proyecto con functions/: también mira los hijos aunque la raíz sea proyecto', () => {
+test('project with functions/: also looks at children even if the root is a project', () => {
   const dir = fixture({
     'package.json': JSON.stringify({ devDependencies: { typescript: '1' } }),
     'firebase.json': '{}',
@@ -64,57 +64,57 @@ test('proyecto con functions/: también mira los hijos aunque la raíz sea proye
   assert.deepEqual(detectStack(dir), ['firebase', 'llm', 'stripe']);
 });
 
-test('una carpeta llamada Android sin proyecto Gradle no es móvil', () => {
+test('a folder named Android without a Gradle project is not mobile', () => {
   assert.deepEqual(detectStack(fixture({ 'Android/sdk/readme.txt': '' })), []);
-  assert.deepEqual(detectStack(fixture({ 'android/app/build.gradle': '' })), ['móvil']);
+  assert.deepEqual(detectStack(fixture({ 'android/app/build.gradle': '' })), ['mobile']);
 });
 
-test('normas según stack', () => {
+test('standards by stack', () => {
   assert.deepEqual(standardsFor(['python']), ['ASVS 5.0']);
-  assert.deepEqual(standardsFor(['firebase', 'móvil', 'llm']), ['ASVS 5.0', 'API Security Top 10 2023', 'MASVS 2.1']);
+  assert.deepEqual(standardsFor(['firebase', 'mobile', 'llm']), ['ASVS 5.0', 'API Security Top 10 2023', 'MASVS 2.1']);
 });
 
-test('salida: como mucho 5 líneas y nombra la skill', () => {
-  const out = render(['firebase', 'móvil']);
+test('output: at most 5 lines and names the skill', () => {
+  const out = render(['firebase', 'mobile']);
   assert.ok(out.split('\n').length <= 5);
   assert.match(out, /secdev:security-checklist/);
 });
 
-test('como proceso: imprime el contexto en un proyecto Firebase, exit 0 y < 1 s', () => {
+test('as a process: prints the context in a Firebase project, exit 0 and < 1 s', () => {
   const r = runHook(join(HOOKS_DIR, 'session-start.mjs'), fixture(FIREBASE_APP));
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /^\[secdev\] Stack detectado: firebase, móvil, stripe\./m);
+  assert.match(r.stdout, /^\[secdev\] Detected stack: firebase, mobile, stripe\./m);
   assert.ok(r.stdout.trim().split('\n').length <= 5);
-  assert.ok(r.ms < 1000, `tardó ${r.ms} ms`);
+  assert.ok(r.ms < 1000, `took ${r.ms} ms`);
 });
 
-test('como proceso: directorio inexistente → exit 0 y sin salida', () => {
+test('as a process: missing directory → exit 0 and no output', () => {
   const r = runHook(join(HOOKS_DIR, 'session-start.mjs'), join(tmpdir(), 'no-existe-secdev-xyz'));
   assert.equal(r.status, 0);
   assert.equal(r.stdout, '');
 });
 
-test('no sigue enlaces de ficheros (package.json o firebase.json apuntando fuera)', (t) => {
+test('does not follow file links (package.json or firebase.json pointing outside)', (t) => {
   const target = fixture(FIREBASE_APP);
   const dir = fixture({});
   try {
     symlinkSync(join(target, 'package.json'), join(dir, 'package.json'), 'file');
     symlinkSync(join(target, 'firestore.rules'), join(dir, 'firebase.json'), 'file');
   } catch {
-    t.skip('no se pueden crear symlinks de fichero en este sistema');
+    t.skip('cannot create file symlinks on this system');
     return;
   }
   assert.deepEqual(detectStack(dir), []);
 });
 
-test('package.json enorme se descarta sin leerlo', () => {
+test('huge package.json is discarded without reading it', () => {
   const big = JSON.stringify({ dependencies: { firebase: '1' }, pad: 'x'.repeat(1_100_000) });
   assert.deepEqual(detectStack(fixture({ 'package.json': big })), []);
 });
 
-test('como proceso: funciona invocado a través de un junction o symlink', (t) => {
-  // El enlace apunta a una copia temporal, nunca a la carpeta real: si el test muere a medias,
-  // una limpieza de %TEMP% que siga junctions no puede borrar el código del repo.
+test('as a process: works when invoked through a junction or symlink', (t) => {
+  // The link points to a temporary copy, never to the real folder: if the test dies halfway,
+  // a %TEMP% cleanup that follows junctions cannot delete the repo code.
   const src = mkdtempSync(join(tmpdir(), 'secdev-src-'));
   temps.push(src);
   for (const f of ['session-start.mjs', 'stack.mjs']) copyFileSync(join(HOOKS_DIR, f), join(src, f));
@@ -123,14 +123,14 @@ test('como proceso: funciona invocado a través de un junction o symlink', (t) =
   try {
     symlinkSync(src, link, process.platform === 'win32' ? 'junction' : 'dir');
   } catch {
-    t.skip('no se pueden crear enlaces en este sistema');
+    t.skip('cannot create links on this system');
     return;
   }
   let r;
   try {
     r = runHook(join(link, 'session-start.mjs'), fixture(FIREBASE_APP));
   } finally {
-    // quita solo el enlace: un junction de Windows se borra como carpeta y un symlink de POSIX como fichero
+    // remove only the link: a Windows junction is deleted as a folder and a POSIX symlink as a file
     (process.platform === 'win32' ? rmdirSync : unlinkSync)(link);
   }
   assert.equal(r.status, 0);

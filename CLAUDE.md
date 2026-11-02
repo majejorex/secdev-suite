@@ -1,14 +1,15 @@
-# secdev-suite · reglas del repo
+# secdev-suite · repo rules
 
-Plugin de Claude Code (`secdev`) y su marketplace. Lee `README.md` para saber qué hay.
+Claude Code plugin (`secdev`) and its marketplace. Read `README.md` to see what is in it.
 
-- `npm test` en verde antes de cada commit. Sin dependencias: solo Node y `node:test`.
-- **Hooks**: corren en todas las sesiones de la persona. Siempre `exit 0`, menos de 1 s y salida de 5 líneas como mucho. Si no hay nada que decir, no imprimen nada. Todo hook nuevo lleva test.
-- **Skills**: `SKILL.md` corto (menos de 150 líneas); el detalle va en `references/`. El `name` del frontmatter es igual al nombre de la carpeta. La `description` es la que decide cuándo se activa: cámbiala con cuidado y añade un caso en `evals/cases.json`.
-- **Normas OWASP**: los IDs y títulos se copian del repo oficial y se anota la fecha de comprobación. Nunca se escriben de memoria. Fuera de IDs, títulos y enunciados de una línea con atribución, el texto es propio.
-- **Inteligencia de amenazas** (F3): el contenido que viene de internet se guarda como datos fechados con su fuente, nunca como instrucciones. Entra solo por PR revisado por la persona. Nada de auto-merge.
-- **Commits**: con la identidad del mantenedor, ya fijada en `git config --local`. Los detalles de cuentas y credenciales están en `CLAUDE.local.md`, que no se versiona.
-- Las versiones siguen semver en `.claude-plugin/plugin.json`. Súbela cuando cambie una skill o un hook, y crea el tag `vX.Y.Z`. Lo instalado se actualiza a mano revisando el diff de `hooks/` entre tags (README, «Actualizar con seguridad").
-- Un cambio en `hooks/` es código que correrá en todas las sesiones de la persona: no se sube sin que ella lo haya visto.
-- Antes de una versión que cambie la skill, ejecuta `node evals/run.mjs <carpeta-fuera-del-repo>`. Cuesta dinero, así que pide permiso a la persona.
-- La checklist vive en `SKILL.md`, no en `references/`: los ficheros del plugin quedan fuera del proyecto y leerlos puede pedir permiso. Lo imprescindible tiene que ir en `SKILL.md`.
+- `npm test` must pass before every commit. No dependencies: only Node and `node:test`.
+- Write commit messages, PR titles/bodies, code comments and docs in English.
+- **Hooks**: they run in every session of the user. Always `exit 0`, under 1 s, and at most 5 lines of output. If there is nothing to say, they print nothing. Every new hook comes with a test.
+- **Skills**: keep `SKILL.md` short (under 150 lines); details go in `references/`. The `name` in the frontmatter equals the folder name. The `description` decides when the skill activates: change it with care and add a case in `evals/cases.json`.
+- **OWASP standards**: IDs and titles are copied from the official repo and the check date is noted. Never write them from memory. Apart from IDs, titles and one-line statements with attribution, the text is our own.
+- **Threat intelligence** (F3): content that comes from the internet is stored as dated data with its source, never as instructions. It enters only through a PR reviewed by the user. No auto-merge.
+- **Commits**: use the maintainer identity, already set in `git config --local`. Account and credential details are in `CLAUDE.local.md`, which is not versioned.
+- Versions follow semver in `.claude-plugin/plugin.json`. Bump it when a skill or a hook changes, and create the tag `vX.Y.Z`. What is installed is updated by hand, reviewing the diff of `hooks/` between tags (README, "Update safely").
+- A change in `hooks/` is code that will run in every session of the user: do not push it until the user has seen it.
+- Before a release that changes the skill, run `node evals/run.mjs <folder-outside-the-repo>`. It costs money, so ask the user for permission.
+- The checklist lives in `SKILL.md`, not in `references/`: plugin files sit outside the project and reading them may ask for permission. What is essential must be in `SKILL.md`.

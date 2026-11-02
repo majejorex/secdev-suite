@@ -1,12 +1,12 @@
-// SessionStart: detecta el stack del proyecto y recuerda la skill secdev:security-checklist.
-// Corre en todas las sesiones: nunca falla (exit 0 siempre) y calla si no hay nada relevante.
-// Es solo punto de entrada (sin comprobar si se invoca directamente: con junctions esa comprobación fallaba).
-// Import dinámico dentro del try: si stack.mjs se rompe, el hook calla en vez de salir con error.
+// SessionStart: detects the project stack and reminds the secdev:security-checklist skill.
+// Runs in every session: never fails (always exit 0) and stays silent when there is nothing relevant.
+// Entry point only (no check for direct invocation: that check failed with junctions).
+// Dynamic import inside the try: if stack.mjs breaks, the hook stays silent instead of exiting with an error.
 try {
   const { detectStack, render } = await import('./stack.mjs');
   const out = render(detectStack(process.env.CLAUDE_PROJECT_DIR || process.cwd()));
   if (out) process.stdout.write(out + '\n');
 } catch {
-  // shortcut: silencio total ante cualquier error; si algún día hace falta diagnosticar, añadir un log a fichero.
+  // shortcut: total silence on any error; if diagnosing is ever needed, add a log to a file.
 }
 process.exit(0);
