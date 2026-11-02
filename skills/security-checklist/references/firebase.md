@@ -29,7 +29,8 @@ En Firebase las reglas de seguridad (Firestore, Storage, Realtime Database) **so
 - La protección contra enumeración de emails está activada.
 - MFA (TOTP o SMS) obligatorio para el staff. Requiere actualizar a Firebase Authentication with Identity Platform. Se comprueba en servidor: en reglas con `request.auth.token.firebase.sign_in_second_factor`, en funciones con el mismo campo del token decodificado. Que solo lo pida la UI no cuenta.
 - Revocación: `revokeRefreshTokens` no invalida los ID tokens ya emitidos (válidos hasta 1 h) y `onCall` no comprueba la revocación. En funciones sensibles, `verifyIdToken(token, true)` o una comprobación propia. En reglas, guardar una marca de revocación y compararla con `request.auth.token.auth_time`.
-- Persistencia de la sesión: en web el SDK guarda el refresh token en IndexedDB, que ASVS 14.3.3 admite si hay CSP y defensa contra XSS. En React Native, `getReactNativePersistence(AsyncStorage)` lo guarda sin cifrar. Es ⚠️: preferir un adaptador sobre SecureStore, o dejar escrito el riesgo aceptado.
+- Persistencia de la sesión en web: el SDK guarda el refresh token en el almacenamiento del navegador. ASVS 14.3.3 admite tokens de sesión ahí. Recomendación propia: con CSP y defensa contra XSS.
+- Persistencia en React Native: `getReactNativePersistence(AsyncStorage)` lo guarda en AsyncStorage, que no está cifrado. Es ⚠️: preferir un adaptador sobre SecureStore, o dejar escrito el riesgo aceptado.
 - Dominios autorizados de Auth limitados a los propios.
 
 ## Claves y configuración — P0-04, P0-10, P0-11

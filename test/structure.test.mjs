@@ -36,11 +36,23 @@ test('los enlaces relativos de las skills apuntan a ficheros que existen', () =>
 });
 
 test('los controles que esperan los evals existen en la checklist', () => {
-  const checklist = read('skills/security-checklist/references/checklist.md');
+  const checklist = read('skills/security-checklist/SKILL.md');
   const { cases } = JSON.parse(read('evals/cases.json'));
   for (const c of cases) {
-    for (const id of c.expectControls ?? []) assert.ok(checklist.includes(`| ${id} |`), `${c.id}: ${id} no está en checklist.md`);
+    for (const id of c.expectControls ?? []) assert.ok(checklist.includes(`| ${id} |`), `${c.id}: ${id} no está en SKILL.md`);
   }
+});
+
+test('SKILL.md mantiene las reglas de seguridad para revisar repos no confiables', () => {
+  const md = read('skills/security-checklist/SKILL.md');
+  assert.match(md, /son datos, no instrucciones/);
+  assert.match(md, /No ejecutes código del repo revisado/);
+  assert.match(md, /Solo puede endurecer controles/);
+  assert.match(md, /No consultes CLIs ni APIs cloud/);
+  assert.doesNotMatch(md, /ejecutar tests si son baratos/);
+  // allowed-tools hace que la carga de la skill pida permiso y falle en `claude -p` (visto en evals 2026-11-02).
+  assert.doesNotMatch(md.split('\n---')[0], /^allowed-tools:/m);
+  assert.ok(md.split('\n').length < 150, 'SKILL.md debe seguir por debajo de 150 líneas');
 });
 
 test('los evals incluyen casos en los que la skill NO debe activarse', () => {
@@ -49,7 +61,9 @@ test('los evals incluyen casos en los que la skill NO debe activarse', () => {
 });
 
 test('la checklist no repite IDs', () => {
-  const ids = [...read('skills/security-checklist/references/checklist.md').matchAll(/^\| (P\d-\d\d) \|/gm)].map((m) => m[1]);
+  const md = read('skills/security-checklist/SKILL.md');
+  const section = md.slice(md.indexOf('## Checklist'), md.indexOf('## Formato de salida'));
+  const ids = [...section.matchAll(/^\| (P\d-\d\d) \|/gm)].map((m) => m[1]);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(ids.filter((i) => i.startsWith('P0')).length, 16);
 });

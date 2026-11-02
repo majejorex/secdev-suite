@@ -1,5 +1,5 @@
 // Detección de stack para el hook SessionStart. Sin efectos: lo prueba hooks/stack.test.mjs.
-import { existsSync, readFileSync, opendirSync } from 'node:fs';
+import { lstatSync, readFileSync, opendirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const MAX_CHILD_DIRS = 30;
@@ -20,11 +20,27 @@ const RULES = [
   { tag: 'docker', files: ['Dockerfile', 'docker-compose.yml', 'compose.yaml'] },
 ];
 
+// Nunca se siguen enlaces: un repo clonado podría apuntar firebase.json o package.json a una ruta UNC
+// (\\host\share), y tocarla haría que Windows enviara el hash NTLM del usuario.
+function lstatOrNull(p) {
+  try {
+    return lstatSync(p, { throwIfNoEntry: false }) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function exists(p) {
+  const st = lstatOrNull(p);
+  return Boolean(st && (st.isFile() || st.isDirectory()));
+}
+
 function readDeps(dir) {
   try {
-    const raw = readFileSync(join(dir, 'package.json'), 'utf8');
-    if (raw.length > MAX_PACKAGE_JSON_BYTES) return new Set();
-    const pkg = JSON.parse(raw);
+    const p = join(dir, 'package.json');
+    const st = lstatOrNull(p);
+    if (!st?.isFile() || st.size > MAX_PACKAGE_JSON_BYTES) return new Set();
+    const pkg = JSON.parse(readFileSync(p, 'utf8'));
     return new Set([...Object.keys(pkg.dependencies ?? {}), ...Object.keys(pkg.devDependencies ?? {})]);
   } catch {
     return new Set();
@@ -35,7 +51,7 @@ function detectIn(dir) {
   const deps = readDeps(dir);
   const tags = new Set();
   for (const rule of RULES) {
-    const byFile = (rule.files ?? []).some((f) => existsSync(join(dir, f)));
+    const byFile = (rule.files ?? []).some((f) => exists(join(dir, f)));
     const byDep = (rule.deps ?? []).some((d) => deps.has(d));
     if (byFile || byDep) tags.add(rule.tag);
   }

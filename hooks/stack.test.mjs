@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, rmdirSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, rmdirSync, symlinkSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -94,11 +94,34 @@ test('como proceso: directorio inexistente → exit 0 y sin salida', () => {
   assert.equal(r.stdout, '');
 });
 
+test('no sigue enlaces de ficheros (package.json o firebase.json apuntando fuera)', (t) => {
+  const target = fixture(FIREBASE_APP);
+  const dir = fixture({});
+  try {
+    symlinkSync(join(target, 'package.json'), join(dir, 'package.json'), 'file');
+    symlinkSync(join(target, 'firestore.rules'), join(dir, 'firebase.json'), 'file');
+  } catch {
+    t.skip('no se pueden crear symlinks de fichero en este sistema');
+    return;
+  }
+  assert.deepEqual(detectStack(dir), []);
+});
+
+test('package.json enorme se descarta sin leerlo', () => {
+  const big = JSON.stringify({ dependencies: { firebase: '1' }, pad: 'x'.repeat(1_100_000) });
+  assert.deepEqual(detectStack(fixture({ 'package.json': big })), []);
+});
+
 test('como proceso: funciona invocado a través de un junction o symlink', (t) => {
+  // El enlace apunta a una copia temporal, nunca a la carpeta real: si el test muere a medias,
+  // una limpieza de %TEMP% que siga junctions no puede borrar el código del repo.
+  const src = mkdtempSync(join(tmpdir(), 'secdev-src-'));
+  temps.push(src);
+  for (const f of ['session-start.mjs', 'stack.mjs']) copyFileSync(join(HOOKS_DIR, f), join(src, f));
   const link = join(mkdtempSync(join(tmpdir(), 'secdev-link-')), 'hooks');
   temps.push(dirname(link));
   try {
-    symlinkSync(HOOKS_DIR, link, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(src, link, process.platform === 'win32' ? 'junction' : 'dir');
   } catch {
     t.skip('no se pueden crear enlaces en este sistema');
     return;
@@ -107,7 +130,7 @@ test('como proceso: funciona invocado a través de un junction o symlink', (t) =
   try {
     r = runHook(join(link, 'session-start.mjs'), fixture(FIREBASE_APP));
   } finally {
-    rmdirSync(link); // quita solo el enlace; nunca borrar recursivo a través de él (apunta a hooks/)
+    rmdirSync(link); // quita solo el enlace
   }
   assert.equal(r.status, 0);
   assert.match(r.stdout, /^\[secdev\]/m);

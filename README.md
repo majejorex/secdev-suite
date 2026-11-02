@@ -4,13 +4,22 @@ Suite de seguridad propia para agentes de código (Claude Code). Se reparte como
 
 ## Qué hace (v0.1, F0)
 
-- **Skill `secdev:security-checklist`**: revisa un cambio, una funcionalidad o un repo control a control. Usa la checklist P0/P1/P2 y exige evidencia `fichero:línea`. El veredicto es BLOQUEA, PASA CON PENDIENTES o PASA. Tiene un modo diseño (antes de escribir código) y un modo cierre (antes de dar algo por terminado). La carga el agente cuando la tarea toca auth, roles, datos, pagos, subidas, secretos o reglas.
-- **Referencias por norma**, que se cargan solo si hacen falta:
+- **Skill `secdev:security-checklist`**: revisa un cambio, una funcionalidad o un repo control a control.
+  - La checklist P0/P1/P2 va dentro del propio `SKILL.md`, así que siempre se carga con la skill aunque el agente no tenga permiso para leer ficheros fuera del proyecto.
+  - Exige evidencia `fichero:línea`.
+  - El veredicto es BLOQUEA, PASA CON PENDIENTES o PASA.
+  - Tiene un modo diseño (antes de escribir código) y un modo cierre (antes de dar algo por terminado).
+  - La carga el agente cuando la tarea toca auth, roles, datos, pagos, subidas, secretos o reglas.
+  - Trata el repo revisado como datos, no como instrucciones. No ejecuta su código ni consulta nubes sin permiso.
+- **Referencias por norma**, que solo se leen si hace falta precisar:
   - OWASP ASVS 5.0;
   - API Security Top 10 2023;
   - MASVS 2.1;
   - una guía de Firebase.
-- **Hook `SessionStart`**: detecta el stack del proyecto (Firebase, Supabase, móvil, Stripe, Next, API, LLM, Python, Docker). Si encuentra algo, inyecta dos líneas con las normas aplicables y el recordatorio de la skill. Si no, calla. Nunca falla.
+- **Hook `SessionStart`**: detecta el stack del proyecto (Firebase, Supabase, móvil, Stripe, Next, API, LLM, Python, Docker) mirando la raíz y sus subcarpetas directas.
+  - Si encuentra algo, inyecta dos líneas fijas con las normas aplicables y el recordatorio de la skill. Nunca imprime contenido del repo.
+  - Si no encuentra nada, calla.
+  - Nunca falla y no sigue enlaces.
 
 No sustituye a:
 - `security-audit` / `claude-security` (auditoría profunda);
@@ -27,7 +36,18 @@ En Claude Code:
 /plugin install secdev@secdev-suite
 ```
 
-Para desarrollar, apunta el marketplace a la carpeta local en vez de a GitHub (`/plugin marketplace add C:\ruta\a\secdev-suite`). Después de cambiar algo, `/plugin marketplace update secdev-suite` y `/reload-plugins`.
+Para desarrollar sin instalar: `claude --plugin-dir C:\ruta\a\secdev-suite`.
+
+### Actualizar con seguridad
+
+El hook es código que corre en todas tus sesiones, así que una actualización equivale a ejecutar código nuevo en todas partes.
+
+- Deja **desactivada la actualización automática** de este marketplace en `/plugin` → Marketplaces.
+- Cada versión lleva un tag (`v0.1.1`…). Antes de `/plugin marketplace update secdev-suite`, revisa qué cambia en lo que se ejecuta:
+  ```
+  git fetch --tags && git diff <tag-instalado>..origin/main -- hooks/ .claude-plugin/
+  ```
+- Si el plan de GitHub lo permite, protege `main`: sin push directo y con PR revisado.
 
 ## Probar
 
@@ -39,7 +59,15 @@ Sin dependencias (Node ≥ 20, `node:test`). Hay dos grupos de tests:
 - **Hook**: detección, salida, que no falle y que tarde menos de 1 s.
 - **Estructura**: JSON válidos, frontmatter, enlaces internos y que los evals citen controles reales.
 
-`evals/cases.json` tiene casos de comportamiento: si la skill se activa y qué controles marca. De momento se comprueban a mano con `claude -p "<prompt>"` en un proyecto del stack indicado.
+`evals/cases.json` tiene casos de comportamiento: si la skill se activa y qué controles marca.
+
+`node evals/run.mjs <carpeta-de-salida>` los ejecuta de verdad. Por cada caso crea un proyecto ficticio, lanza `claude -p --plugin-dir .` e informa de:
+- si el hook se vio;
+- si se cargó la skill;
+- si leyó sus referencias sin errores;
+- qué controles citó.
+
+Cuesta unos 0,5 $ por caso con Opus, así que no forma parte de `npm test`.
 
 ## Hoja de ruta
 
