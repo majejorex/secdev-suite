@@ -49,6 +49,16 @@ En Claude Code:
 /plugin install secdev@secdev-suite
 ```
 
+O desde una terminal:
+
+```
+claude plugin marketplace add majejorex/secdev-suite && claude plugin install secdev@secdev-suite
+```
+
+Reinicia Claude Code para cargarlo. Compruébalo con `claude plugin list`: aparece `secdev@secdev-suite` con su versión.
+
+La actualización automática viene desactivada para este marketplace, como para cualquiera de terceros. Mantenla así: cuando salga una versión nueva, secdev te avisa y actualizas después de revisarla (ver «Actualizar con seguridad»).
+
 Para desarrollar sin instalar: `claude --plugin-dir /ruta/a/secdev-suite`.
 
 ## Cómo funciona
@@ -118,7 +128,7 @@ No sustituye a una auditoría. Para eso remite a:
 > [!IMPORTANT]
 > Los hooks son código que se ejecuta en todas tus sesiones. Actualizar el plugin significa ejecutar código nuevo en todas partes.
 
-- Desactiva la **actualización automática** de este marketplace en `/plugin` → Marketplaces. secdev te avisa él mismo cuando hay una versión nueva.
+- Mantén **desactivada la actualización automática** de este marketplace. Ya viene desactivada por defecto en los marketplaces de terceros; puedes comprobarlo en `/plugin` → Marketplaces. secdev te avisa él mismo cuando hay una versión nueva.
 - Cuando se publica una versión nueva, la siguiente sesión muestra un aviso como este (en inglés):
   ```
   secdev 0.3.4 is available (installed: 0.3.3). Review what changes in hooks/ before updating:

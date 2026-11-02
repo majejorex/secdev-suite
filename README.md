@@ -47,6 +47,16 @@ In Claude Code:
 /plugin install secdev@secdev-suite
 ```
 
+Or from a terminal:
+
+```
+claude plugin marketplace add majejorex/secdev-suite && claude plugin install secdev@secdev-suite
+```
+
+Restart Claude Code to load it. Check it with `claude plugin list`: it shows `secdev@secdev-suite` and its version.
+
+Auto-update is off by default for this marketplace, as for any third-party one. Keep it off: when a new version comes out, secdev tells you and you update after reviewing it (see "Updating safely").
+
 To develop without installing: `claude --plugin-dir /path/to/secdev-suite`.
 
 ## How it works
@@ -116,7 +126,7 @@ It doesn't replace an audit. For that it points to:
 > [!IMPORTANT]
 > The hooks are code that runs in every one of your sessions. Updating the plugin means running new code everywhere.
 
-- Turn **auto-update off** for this marketplace in `/plugin` → Marketplaces. secdev tells you itself when there is a new version.
+- Keep **auto-update off** for this marketplace. It is already off by default for third-party marketplaces; you can check it in `/plugin` → Marketplaces. secdev tells you itself when there is a new version.
 - When a new version is published, the next session shows a notice like this one:
   ```
   secdev 0.3.4 is available (installed: 0.3.3). Review what changes in hooks/ before updating:
