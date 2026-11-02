@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, rmdirSync, symlinkSync, copyFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, rmdirSync, unlinkSync, symlinkSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -130,7 +130,8 @@ test('como proceso: funciona invocado a través de un junction o symlink', (t) =
   try {
     r = runHook(join(link, 'session-start.mjs'), fixture(FIREBASE_APP));
   } finally {
-    rmdirSync(link); // quita solo el enlace
+    // quita solo el enlace: un junction de Windows se borra como carpeta y un symlink de POSIX como fichero
+    (process.platform === 'win32' ? rmdirSync : unlinkSync)(link);
   }
   assert.equal(r.status, 0);
   assert.match(r.stdout, /^\[secdev\]/m);
