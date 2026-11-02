@@ -87,6 +87,13 @@ Cuesta unos 0,5 $ por caso con Opus, así que no forma parte de `npm test`.
   - skill `secure-design`;
   - `SECURITY-PROFILE.md` por proyecto.
 - **F2**: skill `security-gate`, que mete gitleaks, `osv-scanner` y Semgrep en el gate de cada repo.
+
+**Orden decidido el 2026-11-02:**
+1. Primero la F2, porque el hueco real de los repos donde se usa es la falta de un escáner de secretos y dependencias.
+2. Luego `authz-tests`.
+3. `secure-design` y `SECURITY-PROFILE.md` después.
+
+El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora: `osv-scanner` cubre los CVE, y lo demás (paquetes abandonados, publicadores, install scripts) se revisa cuando la F2 esté en marcha.
 - **F3**: inteligencia de amenazas.
   - Una tarea semanal consulta una lista cerrada de fuentes (GitHub Advisories, CISA KEV, OSV, boletines de proveedores) y abre un PR en este repo.
   - Nunca se fusiona sola. La inteligencia se guarda como datos, no como instrucciones.
