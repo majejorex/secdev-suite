@@ -39,6 +39,18 @@
       "stack": ["next"],
       "prompt": "Cambia el color del botón primario a azul oscuro.",
       "trigger": false
+    },
+    {
+      "id": "no-trigger-refactor",
+      "stack": ["firebase"],
+      "prompt": "Extrae a una función aparte el formateo de fechas de este handler, sin cambiar lo que devuelve.",
+      "trigger": false
+    },
+    {
+      "id": "no-trigger-copy",
+      "stack": ["móvil"],
+      "prompt": "Corrige la falta de ortografía en el texto de bienvenida de la pantalla de inicio.",
+      "trigger": false
     }
   ]
 }

@@ -1,6 +1,6 @@
 ---
 name: security-checklist
-description: Checklist de seguridad con evidencia (P0 bloquea publicar, P1 proceso, P2 según funcionalidad) basada en OWASP ASVS 5.0, API Security Top 10 2023 y MASVS 2.1, con referencias para Firebase y Supabase. Úsala al diseñar o antes de dar por terminada cualquier tarea que toque autenticación, login, roles o permisos, datos de usuario o de otros usuarios, pagos o webhooks, subidas de archivos, secretos o claves, reglas de acceso (Firestore/Storage rules, RLS), endpoints o callables, sesiones o tokens, CORS/CSP o cabeceras, datos sanitarios o de menores, o funciones con LLM. También para «¿es seguro?», «revisa la seguridad de este cambio», «checklist de seguridad», «¿podemos publicar?».
+description: Checklist de seguridad con evidencia («¿es seguro?», «¿podemos publicar?», «revisa la seguridad») basada en OWASP ASVS 5.0, API Security Top 10 2023 y MASVS 2.1, con guía de Firebase. Úsala al diseñar o antes de dar por terminada una tarea que añada o cambie autenticación, roles o permisos, acceso a datos de otros usuarios, pagos o webhooks, subidas de archivos, secretos, reglas de acceso (Firestore/Storage rules, RLS), endpoints o callables nuevos, sesiones o tokens, CORS/CSP, datos sanitarios o de menores, o funciones con LLM. No hace falta para cambios de estilo, textos o refactors sin cambio de contrato.
 ---
 
 # Security checklist
@@ -20,11 +20,13 @@ Si no está claro, usa **cierre**.
 
 1. **Alcance.** Qué se revisa: el diff, una funcionalidad o el repo entero. Lista los ficheros y las rutas de datos afectadas.
 2. **Perfil.** Usa el stack que inyectó el hook `[secdev]` o detéctalo (package.json, firebase.json, app.json). Si el repo tiene `SECURITY-PROFILE.md`, léelo: manda sobre los valores por defecto (datos especiales, roles, entornos).
-3. **Controles.** Abre [references/checklist.md](references/checklist.md) y marca qué controles aplican. Abre solo la referencia de norma que el stack necesita:
+3. **Controles.** Abre [references/checklist.md](references/checklist.md) y marca qué controles aplican. Si el alcance es un diff, los P1 (proceso: backups, incidentes, CI…) solo aplican si el cambio los toca; en una revisión de repo o antes de publicar, aplican todos. Abre solo la referencia de norma que el stack necesita:
    - Siempre: [references/asvs-5.md](references/asvs-5.md) (solo los capítulos que toque el cambio).
    - API, callables, BaaS o backend: [references/api-top10-2023.md](references/api-top10-2023.md).
    - App móvil (Expo, React Native, nativa): [references/masvs-2.md](references/masvs-2.md).
    - Firebase: [references/firebase.md](references/firebase.md).
+   - Supabase o Postgres expuesto: aún no hay referencia propia; lo mínimo es RLS activado en cada tabla con políticas por `auth.uid()` y la `service_role` key solo en servidor.
+   - LLM o agentes: aún no hay referencia propia; usa P2-04 y no cites IDs del OWASP LLM Top 10 de memoria.
 4. **Verificación.** Para cada control aplicable, busca la evidencia en el código, la configuración o los tests (Grep/Read; ejecutar tests si son baratos). Estados:
    - ✅ cumple: con evidencia `fichero:línea`, comando y su salida, o test que lo cubre.
    - ❌ no cumple: con evidencia de la ausencia o del fallo.
@@ -33,7 +35,7 @@ Si no está claro, usa **cierre**.
    Sin evidencia no hay ✅. «Parece que» no es evidencia.
 5. **Veredicto.**
    - **BLOQUEA** si algún P0 aplicable está ❌.
-   - **PASA CON PENDIENTES** si no hay P0 ❌ pero hay P1/P2 ❌ o ⚠️.
+   - **PASA CON PENDIENTES** si no hay P0 ❌ pero hay cualquier ⚠️ (también de P0) o algún P1/P2 ❌. Si es antes de publicar y hay un P0 ⚠️, la persona tiene que confirmarlo expresamente.
    - **PASA** si todo lo aplicable está ✅ o N/A justificado.
 
 ## Formato de salida

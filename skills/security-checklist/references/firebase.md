@@ -9,7 +9,7 @@ En Firebase las reglas de seguridad (Firestore, Storage, Realtime Database) **so
 - Roles desde custom claims (`request.auth.token.role`) puestos por el servidor, o desde un documento que el cliente no puede escribir. Nunca desde un campo que el propio usuario edita.
 - Escrituras con lista blanca de campos: `request.resource.data.keys().hasOnly([...])` y `diff(...).affectedKeys().hasOnly([...])` para impedir la asignación masiva (`role`, `isVerified`, `balance`).
 - Validación de tipos y tamaños en las reglas: strings con longitud máxima, enums cerrados.
-- `list` (consultas) es distinto de `get`: comprobar que una consulta no devuelve documentos ajenos.
+- Las reglas no filtran resultados: una consulta se rechaza entera si la regla no queda garantizada por la propia consulta. El riesgo real es un `allow list` (o `read`) amplio, como `if request.auth != null`, que deja a cualquier usuario con sesión leer la colección entera. Revisa `list` por separado de `get`.
 - Storage: `request.resource.size` y `contentType` limitados; rutas privadas con el `uid` en la ruta y comprobado.
 - **Tests** con el emulador y `@firebase/rules-unit-testing`: por cada colección sensible, un caso de «otro usuario» y otro de «sin sesión» que deben fallar (P0-15).
 
@@ -27,8 +27,9 @@ En Firebase las reglas de seguridad (Firestore, Storage, Realtime Database) **so
 ## Auth — P0-01, P0-06
 
 - La protección contra enumeración de emails está activada.
-- MFA (TOTP) obligatorio para el staff, comprobado en servidor (claims o reglas), no solo en la UI.
-- Revocar los refresh tokens (`revokeRefreshTokens`) al banear o cambiar el rol; las reglas o funciones sensibles comprueban `auth_time` o tokens revocados.
+- MFA (TOTP o SMS) obligatorio para el staff. Requiere actualizar a Firebase Authentication with Identity Platform. Se comprueba en servidor: en reglas con `request.auth.token.firebase.sign_in_second_factor`, en funciones con el mismo campo del token decodificado. Que solo lo pida la UI no cuenta.
+- Revocación: `revokeRefreshTokens` no invalida los ID tokens ya emitidos (válidos hasta 1 h) y `onCall` no comprueba la revocación. En funciones sensibles, `verifyIdToken(token, true)` o una comprobación propia. En reglas, guardar una marca de revocación y compararla con `request.auth.token.auth_time`.
+- Persistencia de la sesión: en web el SDK guarda el refresh token en IndexedDB, que ASVS 14.3.3 admite si hay CSP y defensa contra XSS. En React Native, `getReactNativePersistence(AsyncStorage)` lo guarda sin cifrar. Es ⚠️: preferir un adaptador sobre SecureStore, o dejar escrito el riesgo aceptado.
 - Dominios autorizados de Auth limitados a los propios.
 
 ## Claves y configuración — P0-04, P0-10, P0-11
