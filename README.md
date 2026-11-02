@@ -72,6 +72,7 @@ Cuesta unos 0,5 $ por caso con Opus, así que no forma parte de `npm test`.
 ## Hoja de ruta
 
 - **F1**:
+  - **hook de aviso `PreToolUse`** (decidido el 2026-11-02): al editar rutas de riesgo (reglas, auth, pagos, functions…) recuerda cargar `secdev:security-checklist`. Avisa, no bloquea. Motivo: en los evals la skill se activó solo en unos 3 de cada 4 casos positivos;
   - skill `authz-tests` (genera la matriz y los tests de BOLA y BFLA);
   - skill `secure-design`;
   - `SECURITY-PROFILE.md` por proyecto.
