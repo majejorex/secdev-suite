@@ -30,6 +30,8 @@
   <sub>A Claude Code plugin. This repo is both the plugin and its marketplace.</sub>
 </p>
 
+<p align="center"><strong>English</strong> · <a href="README.es.md">Español</a></p>
+
 ---
 
 You ask your agent for order refunds. It writes them, the tests pass, and it tells you it's done. Nobody checked whether a customer can refund someone else's order by changing an ID.
@@ -88,11 +90,11 @@ It reviews a change, a feature or a whole repo.
 
 <br>
 
-**P0, blocks a release:** authentication, server-side authorization, isolation between users or tenants, secrets, input validation, sessions, HTTPS, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain.
+**P0, blocks a release:** authentication (password hashing and reset links included), server-side authorization (admin routes included), isolation between users or tenants, secrets (git history included), input validation, sessions, HTTPS, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain.
 
 **P1, process:** protected repos, automated scanning, dependencies, deployments, logging and audit trails, alerts, backups with a tested restore, incident response and periodic reviews.
 
-**P2, depending on the feature:** mobile, payments, GDPR, AI and LLMs, third-party integrations and secure design.
+**P2, depending on the feature:** mobile, payments, GDPR (no trackers before consent), AI and LLMs, third-party integrations and secure design.
 
 The full list, with how to verify each control and its standard, is in [skills/security-checklist/SKILL.md](skills/security-checklist/SKILL.md).
 
