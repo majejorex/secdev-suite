@@ -59,6 +59,32 @@ Auto-update is off by default for this marketplace, as for any third-party one. 
 
 To develop without installing: `claude --plugin-dir /path/to/secdev-suite`.
 
+## Use it in practice
+
+You don't run anything special. You work as usual and ask in plain words, in English or Spanish. These are the four moments where it pays off.
+
+| When | What you type | What you get |
+|---|---|---|
+| **Before writing a feature** | "I'm going to add refunds for orders. Which security controls apply?" | *Design* mode: the controls that apply and 2-5 concrete abuse cases ("a customer changes `orderId` and refunds someone else's order"). No verdict, no code yet. |
+| **While you code** | Nothing. | If an edit touches auth, rules, payments, uploads, secrets… the hook reminds the agent once, naming the controls to check, for example `payments and webhooks (P2-02)`. |
+| **Before you open a PR** | "Can we ship this?" or "Review the security of this change." | *Sign-off* mode over the diff: a `Verdict:` line and a table with one row per control that applies, each with `file:line` evidence. |
+| **Before a release** | "Review the security of the whole repo before the release." | The same, but every P0 applies. Controls the code can't show (MFA on the cloud console, backups, separate environments) come back as ⚠️ with what to check and where. |
+
+### Reading the result
+
+- **BLOCK**: a P0 control is not met. Don't release. Ask "fix P0-02" (or several at once) and run the review again.
+- **PASS WITH ISSUES**: no P0 fails, but something is ⚠️ or a P1/P2 fails. You can ship after you check the ⚠️ items yourself, usually in the cloud console. Before a release, a P0 at ⚠️ needs your explicit OK.
+- **PASS**: everything that applies is met, or is N/A with a reason.
+
+The review never changes code on its own: you decide what to fix. When the fix for a ❌ is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later.
+
+### Tips
+
+- **Name the scope** when it isn't obvious: "this diff", "the `functions/` folder", "the whole repo".
+- **Distrust a ✅ without evidence.** Every ✅ must cite a `file:line` or a test. If one doesn't, ask for it.
+- **⚠️ is not a failure.** It means the code can't show it. Go and look where the report says, then tell the agent what you found.
+- **It's not an audit.** For a deep vulnerability hunt, use `security-audit` or `claude-security` (see below).
+
 ## How it works
 
 <p align="center">
