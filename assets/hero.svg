@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 470" width="880" height="470" role="img" aria-label="Sesión de Claude Code con secdev: el hook detecta firebase, next y stripe; al editar functions/src/orders.ts avisa de endpoints y pagos; la checklist da BLOQUEA porque P0-02 no comprueba el propietario en orders.ts:40.">
+  <style>
+    .m { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12.5px; fill: #c9d1d9; }
+    .s { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .dim { fill: #7d8590; }
+    .tag { fill: #10b981; font-weight: 700; }
+    .you { fill: #e6edf3; font-weight: 600; }
+    .h { font-weight: 700; fill: #e6edf3; }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="880" height="470" rx="14" fill="url(#bg)"/>
+  <rect x=".5" y=".5" width="879" height="469" rx="14" fill="none" stroke="#30363d"/>
+
+  <!-- barra de título -->
+  <circle cx="24" cy="22" r="6" fill="#f85149"/>
+  <circle cx="44" cy="22" r="6" fill="#d29922"/>
+  <circle cx="64" cy="22" r="6" fill="#3fb950"/>
+  <text x="440" y="26" text-anchor="middle" class="m dim">claude · ~/tienda</text>
+  <line x1="0" y1="44" x2="880" y2="44" stroke="#30363d"/>
+
+  <!-- SessionStart -->
+  <text x="28" y="76" class="m"><tspan class="tag">[secdev]</tspan> Stack detectado: firebase, next, stripe. Normas aplicables: ASVS 5.0 + API Security Top 10 2023.</text>
+
+  <!-- prompt -->
+  <text x="28" y="110" class="m"><tspan class="dim">&gt;</tspan> <tspan class="you">Añade el reembolso de pedidos desde el panel de cliente</tspan></text>
+  <text x="28" y="136" class="m"><tspan fill="#3fb950">●</tspan> Edit <tspan fill="#79c0ff">functions/src/orders.ts</tspan> <tspan class="dim">(+38)</tspan></text>
+
+  <!-- PostToolUse -->
+  <text x="28" y="168" class="m"><tspan class="tag">[secdev]</tspan> Este cambio toca: endpoints y callables, pagos y webhooks. Antes de dar la tarea por</text>
+  <text x="28" y="186" class="m"><tspan visibility="hidden">[secdev]</tspan> terminada, carga la skill secdev:security-checklist en modo cierre y pon su veredicto.</text>
+
+  <line x1="28" y1="208" x2="852" y2="208" stroke="#30363d" stroke-dasharray="3 4"/>
+
+  <!-- veredicto -->
+  <text x="28" y="240" class="m h">Veredicto:</text>
+  <rect x="112" y="223" width="86" height="24" rx="12" fill="#f85149" fill-opacity=".15" stroke="#f85149"/>
+  <text x="155" y="240" text-anchor="middle" class="m" fill="#ff7b72" style="fill:#ff7b72;font-weight:700">BLOQUEA</text>
+  <text x="28" y="266" class="m dim" xml:space="preserve">Alcance: diff de orders.ts  ·  Stack: firebase, next, stripe  ·  Normas: ASVS 5.0, API Top 10</text>
+
+  <!-- tabla -->
+  <rect x="28" y="282" width="824" height="28" rx="6" fill="#161b22"/>
+  <text y="301" class="m h"><tspan x="40">ID</tspan><tspan x="108">Control</tspan><tspan x="330">Estado</tspan><tspan x="392">Evidencia</tspan><tspan x="760">Norma</tspan></text>
+
+  <g class="m">
+    <line x1="28" y1="342" x2="852" y2="342" stroke="#21262d"/>
+    <text y="331"><tspan x="40">P0-02</tspan><tspan x="108">Autorización en backend</tspan><tspan x="392">orders.ts:40 no comprueba el propietario</tspan><tspan x="760" class="dim">V8.2 · API1</tspan></text>
+    <circle cx="350" cy="327" r="9" fill="#f85149"/>
+    <path d="M346 323 L354 331 M354 323 L346 331" stroke="#0b1220" stroke-width="2.2" stroke-linecap="round"/>
+
+    <line x1="28" y1="374" x2="852" y2="374" stroke="#21262d"/>
+    <text y="363"><tspan x="40">P0-08</tspan><tspan x="108">Protección contra abusos</tspan><tspan x="392">límite de reembolsos: mirar en la consola</tspan><tspan x="760" class="dim">V2.4 · API4</tspan></text>
+    <circle cx="350" cy="359" r="9" fill="#d29922"/>
+    <path d="M350 354 L350 360 M350 364 L350 364.5" stroke="#0b1220" stroke-width="2.4" stroke-linecap="round"/>
+
+    <text y="395"><tspan x="40">P2-02</tspan><tspan x="108">Pagos seguros</tspan><tspan x="392">importe del servidor, orders.ts:52</tspan><tspan x="760" class="dim">V2.3 · API6</tspan></text>
+    <circle cx="350" cy="391" r="9" fill="#3fb950"/>
+    <path d="M345.5 391 L349 394.5 L355 387.5" fill="none" stroke="#0b1220" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="28" y="436" class="m dim">Pendientes: P0-02 primero. Arreglo: tomar el uid del token y comparar con order.userId.</text>
+</svg>

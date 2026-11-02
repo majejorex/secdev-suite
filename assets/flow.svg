@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 380" width="880" height="380" role="img" aria-label="Cómo funciona: al abrir sesión el hook SessionStart detecta el stack; al editar algo de riesgo el hook PostToolUse avisa una vez; antes de terminar la skill security-checklist revisa control a control. Veredictos: BLOQUEA si hay un P0 sin cumplir, PASA CON PENDIENTES si falta verificar algo o falla un P1/P2, PASA si todo cumple o no aplica.">
+  <style>
+    .s { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .m { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .n { font-size: 13px; font-weight: 700; fill: #10b981; letter-spacing: .08em; }
+    .t { font-size: 18px; font-weight: 700; fill: #e6edf3; }
+    .c { font-size: 12.5px; fill: #79c0ff; }
+    .d { font-size: 13.5px; fill: #9da7b3; }
+    .v { font-size: 13px; font-weight: 700; }
+  </style>
+  <rect width="880" height="380" rx="14" fill="#0b1220"/>
+  <rect x=".5" y=".5" width="879" height="379" rx="14" fill="none" stroke="#30363d"/>
+
+  <!-- tres pasos -->
+  <g class="s">
+    <rect x="24" y="24" width="256" height="180" rx="12" fill="#111827" stroke="#30363d"/>
+    <text x="44" y="56" class="n">1 · ABRES SESIÓN</text>
+    <text x="44" y="86" class="t">Detecta el stack</text>
+    <text x="44" y="110" class="m c">hook SessionStart</text>
+    <text x="44" y="142" class="d">Firebase, Supabase, móvil,</text>
+    <text x="44" y="162" class="d">Stripe, Next, API, LLM…</text>
+    <text x="44" y="182" class="d">y dice qué normas aplican.</text>
+
+    <rect x="312" y="24" width="256" height="180" rx="12" fill="#111827" stroke="#30363d"/>
+    <text x="332" y="56" class="n">2 · EDITAS ALGO DE RIESGO</text>
+    <text x="332" y="86" class="t">Avisa una vez</text>
+    <text x="332" y="110" class="m c">hook PostToolUse</text>
+    <text x="332" y="142" class="d">Auth, roles, pagos, reglas,</text>
+    <text x="332" y="162" class="d">secretos, subidas, CORS…</text>
+    <text x="332" y="182" class="d">Nunca bloquea.</text>
+
+    <rect x="600" y="24" width="256" height="180" rx="12" fill="#111827" stroke="#10b981" stroke-opacity=".6"/>
+    <text x="620" y="56" class="n">3 · ANTES DE TERMINAR</text>
+    <text x="620" y="86" class="t">Revisa con evidencia</text>
+    <text x="620" y="110" class="m c">secdev:security-checklist</text>
+    <text x="620" y="142" class="d">P0 / P1 / P2 control a control,</text>
+    <text x="620" y="162" class="d">cada uno con fichero:línea.</text>
+    <text x="620" y="182" class="d">Sin evidencia no hay ✓.</text>
+  </g>
+
+  <!-- flechas -->
+  <path d="M284 114 H306 M300 108 L306 114 L300 120" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M572 114 H594 M588 108 L594 114 L588 120" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- veredictos -->
+  <text x="24" y="246" class="s" style="font-size:13px;font-weight:700;fill:#7d8590;letter-spacing:.08em">VEREDICTO</text>
+  <g class="s">
+    <rect x="24" y="262" width="256" height="92" rx="12" fill="#f85149" fill-opacity=".1" stroke="#f85149" stroke-opacity=".7"/>
+    <text x="44" y="294" class="v" fill="#ff7b72">BLOQUEA</text>
+    <text x="44" y="320" class="d">Algún P0 aplicable no se cumple.</text>
+    <text x="44" y="340" class="d">No se publica.</text>
+
+    <rect x="312" y="262" width="256" height="92" rx="12" fill="#d29922" fill-opacity=".1" stroke="#d29922" stroke-opacity=".7"/>
+    <text x="332" y="294" class="v" fill="#e3b341">PASA CON PENDIENTES</text>
+    <text x="332" y="320" class="d">Algo no se puede verificar desde</text>
+    <text x="332" y="340" class="d">el código, o falla un P1 / P2.</text>
+
+    <rect x="600" y="262" width="256" height="92" rx="12" fill="#3fb950" fill-opacity=".1" stroke="#3fb950" stroke-opacity=".7"/>
+    <text x="620" y="294" class="v" fill="#56d364">PASA</text>
+    <text x="620" y="320" class="d">Todo lo aplicable cumple,</text>
+    <text x="620" y="340" class="d">o su N/A está justificado.</text>
+  </g>
+</svg>
