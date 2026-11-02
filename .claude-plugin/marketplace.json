@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "secdev-suite",
+  "owner": {
+    "name": "majejorex",
+    "url": "https://github.com/majejorex"
+  },
+  "description": "Marketplace privado de la suite de seguridad secdev.",
+  "plugins": [
+    {
+      "name": "secdev",
+      "source": "./",
+      "description": "Checklist de seguridad P0/P1/P2 con evidencia (OWASP ASVS 5.0, API Top 10 2023, MASVS 2.1) y detección de stack.",
+      "keywords": ["security", "owasp", "checklist"]
+    }
+  ]
+}

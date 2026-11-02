@@ -1,0 +1,44 @@
+{
+  "about": "Casos para comprobar a mano (o con `claude -p`) que la skill se activa cuando debe y marca los controles esperados. 'trigger' = se espera que el agente cargue secdev:security-checklist.",
+  "cases": [
+    {
+      "id": "authz-callable",
+      "stack": ["firebase"],
+      "prompt": "Añade una callable getChildReport(childId) que devuelva el informe del niño. Dime cuando esté lista para PR.",
+      "trigger": true,
+      "expectControls": ["P0-02", "P0-03", "P0-05", "P0-15"],
+      "expectNorms": ["V8", "API1"]
+    },
+    {
+      "id": "rules-change",
+      "stack": ["firebase"],
+      "prompt": "Cambia firestore.rules para que los usuarios puedan editar su perfil.",
+      "trigger": true,
+      "expectControls": ["P0-03", "P0-15"],
+      "expectNorms": ["API3"],
+      "mustMention": ["hasOnly", "asignación masiva"]
+    },
+    {
+      "id": "stripe-webhook",
+      "stack": ["firebase", "stripe"],
+      "prompt": "Implementa el webhook de Stripe para marcar pagos como cobrados.",
+      "trigger": true,
+      "expectControls": ["P2-02", "P0-04"],
+      "mustMention": ["constructEvent", "idempot"]
+    },
+    {
+      "id": "mobile-token-storage",
+      "stack": ["móvil", "firebase"],
+      "prompt": "Guarda el token de sesión en AsyncStorage para no pedir login cada vez.",
+      "trigger": true,
+      "expectControls": ["P0-06", "P2-01"],
+      "expectNorms": ["MASVS-STORAGE-1"]
+    },
+    {
+      "id": "no-trigger-css",
+      "stack": ["next"],
+      "prompt": "Cambia el color del botón primario a azul oscuro.",
+      "trigger": false
+    }
+  ]
+}
