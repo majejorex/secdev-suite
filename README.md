@@ -82,7 +82,7 @@ For a team, the repo's `.claude/settings.json` must also declare the marketplace
 
 In a new project:
 
-1. **Open it with Claude Code.** If the project uses one of the stacks it knows, you will see `[secdev] Detected stack: ...`. It knows Firebase, Supabase, Expo, React Native and Capacitor, Electron and Tauri, Stripe, Next, Express, Fastify, Hono, Koa and Nest, LLM SDKs, Python and Docker. With any other stack it stays silent, and the skills still work with the general ASVS checklist.
+1. **Open it with Claude Code.** If the project uses one of the stacks it knows, you will see `[secdev] Detected stack: ...`. It knows Firebase, Supabase, Expo, React Native and Capacitor, Electron and Tauri, Stripe, Next, Express, Fastify, Hono, Koa and Nest, LLM SDKs, Docker, and the languages Python, Go, Rust, Java and Kotlin, PHP, Ruby and .NET (with the API frameworks named in their manifests). With any other stack it stays silent, and the skills still work with the general ASVS checklist.
 2. **Work as usual.** When an edit touches something sensitive (auth, rules, payments, uploads, secrets, CI workflows, Dockerfiles...) the agent gets a reminder with the controls to check.
 3. **Before a PR or a release, ask** "Can we ship this?" or "Review the security of this change" (see the next section).
 4. **Once per repo, ask** "Add a security gate to CI". It shows you the workflow and what leaves the repo, and writes `.github/workflows/security.yml` only after your OK. Then, in GitHub (Settings, Rules), require the status checks `secrets`, `dependencies` and `sast`. Until you do, they only warn.
@@ -111,7 +111,7 @@ You don't run anything special. You work as usual and ask in plain words, in Eng
 - **PASS WITH ISSUES**: no P0 fails, but something is UNVERIFIED or a P1/P2 fails. You can ship after you check the UNVERIFIED items yourself, usually in the cloud console. Before a release, a P0 at UNVERIFIED needs your explicit OK.
 - **PASS**: everything that applies is met, or is N/A with a reason.
 
-The review never changes code on its own: you decide what to fix. When the fix for a NOT MET is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later.
+The review never changes code on its own: you decide what to fix. When the fix for a NOT MET is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later. To have them fixed, say "fix the P0s" or "fix P0-02": `secdev:security-fix` shows a plan, edits the code, adds the authorization test, re-verifies the fixed rows (3 passes at most) and leaves the commit to you.
 
 ### Tips
 
@@ -254,7 +254,7 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 - **Gate:** a `critical` case (the ones that must BLOCK, the prompt-injection case and the cases that must not activate) passes 3/3; any other case at least 2/3. A case that sometimes fails is reported as `flaky`.
 - A case passes only if the skill loads, the expected controls are cited, the key words are named (with synonyms), and the verdict follows from its own table: a P0 at NOT MET means BLOCK, and any NOT MET or UNVERIFIED rules out PASS.
 - The run writes `summary.md`. It is copied to `docs/evals/<version>.md`, so results can be compared between versions.
-- Cost: about $9 per run (15 cases × 3).
+- Cost: about $18 per run (28 cases × 3).
 
 ## Roadmap
 
@@ -263,7 +263,9 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 | F0 | `security-checklist` skill, per-standard references and the `SessionStart` hook | Done, v0.1 |
 | F1 | `PostToolUse` warning hook, using the `security-guidance` format (`hookSpecificOutput.additionalContext`). Without it, the skill activated in about 3 of 4 positive eval cases | Done, v0.2.0 |
 | F1 | `authz-tests` skill: the matrix and tests for BOLA and BFLA | Planned |
-| F1 | `secure-design` skill and a per-project `SECURITY-PROFILE.md` | Planned |
+| F1 | `SECURITY-PROFILE.md`: the checklist creates it and reads accepted risks and attestations from the default branch | Done, v0.5.0 |
+| F1 | `secure-design` skill (design mode already lives in the checklist) | Planned |
+| F5 | Wider stack detection, references for Go, Rust, JVM, PHP, Python, Ruby, .NET, cloud, Supabase and LLM, and the `security-fix` skill | Done, v0.5.0 |
 | F2 | `security-gate` skill: gitleaks, `osv-scanner` and Semgrep in every repo's gate | Done, v0.4.0 |
 | F3 | Threat intelligence, manual version (`/intel-review`) | Done |
 | F4 | Evals that measure stability: 3 repeats per case, a release gate and a pinned model | Done, v0.4.3 and v0.4.4 |
@@ -272,9 +274,9 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 
 1. ~~F2 first~~: done in v0.4.0.
 2. Next, `authz-tests`.
-3. After that, `secure-design` and `SECURITY-PROFILE.md`.
+3. After that, `secure-design`.
 
-Not planned: running the evals in CI. A full run costs about $13, so the maintainer runs it before a release that changes a skill.
+Not planned: running the evals in CI. A full run costs about $18, so the maintainer runs it before a release that changes a skill.
 
 Trail of Bits' `supply-chain-risk-auditor` isn't installed for now. `osv-scanner` covers CVEs, and the rest (abandoned packages, publishers, install scripts) will be reviewed now that F2 is running.
 

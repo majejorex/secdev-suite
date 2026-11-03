@@ -84,7 +84,7 @@ Para un equipo, el `.claude/settings.json` del repo debe declarar también el ma
 
 En un proyecto nuevo:
 
-1. **Ábrelo con Claude Code.** Si el proyecto usa un stack que conoce, verás `[secdev] Detected stack: ...`. Conoce Firebase, Supabase, Expo, React Native y Capacitor, Electron y Tauri, Stripe, Next, Express, Fastify, Hono, Koa y Nest, SDKs de LLM, Python y Docker. Con cualquier otro stack no dice nada, y las skills siguen funcionando con el checklist general de ASVS.
+1. **Ábrelo con Claude Code.** Si el proyecto usa un stack que conoce, verás `[secdev] Detected stack: ...`. Conoce Firebase, Supabase, Expo, React Native y Capacitor, Electron y Tauri, Stripe, Next, Express, Fastify, Hono, Koa y Nest, SDKs de LLM, Docker, y los lenguajes Python, Go, Rust, Java y Kotlin, PHP, Ruby y .NET (con los frameworks de API que nombran sus manifiestos). Con cualquier otro stack no dice nada, y las skills siguen funcionando con el checklist general de ASVS.
 2. **Trabaja como siempre.** Cuando una edición toca algo sensible (auth, reglas, pagos, subidas, secretos, workflows de CI, Dockerfiles...), el agente recibe un aviso con los controles que debe mirar.
 3. **Antes de una PR o de un release, pregunta** «¿Podemos publicar esto?» o «Revisa la seguridad de este cambio» (ver la sección siguiente).
 4. **Una vez por repo, pide** «Añade un gate de seguridad en CI». Te enseña el workflow y qué sale del repo, y escribe `.github/workflows/security.yml` solo cuando le das el OK. Después, en GitHub (Settings, Rules), exige los checks `secrets`, `dependencies` y `sast`. Hasta entonces solo avisan.
@@ -113,7 +113,7 @@ No hay que ejecutar nada especial. Trabajas como siempre y preguntas con tus pal
 - **PASS WITH ISSUES**: no falla ningún P0, pero hay algo en UNVERIFIED o falla un P1/P2. Puedes publicar después de comprobar tú los UNVERIFIED, normalmente en la consola cloud. Antes de un release, un P0 en UNVERIFIED necesita tu confirmación explícita.
 - **PASS**: todo lo que aplica se cumple o está justificado como N/A.
 
-La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuando el arreglo de un NOT MET es evidente, viene en una línea, y los IDs (`P0-02`) te sirven para referirte a un hallazgo después.
+La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuando el arreglo de un NOT MET es evidente, viene en una línea, y los IDs (`P0-02`) te sirven para referirte a un hallazgo después. Para que los arregle, di «arregla los P0» o «arregla P0-02»: `secdev:security-fix` te enseña un plan, edita el código, añade el test de autorización, vuelve a verificar las filas arregladas (3 pasadas como máximo) y deja el commit para ti.
 
 ### Consejos
 
@@ -130,7 +130,7 @@ La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuan
 
 ### 1 · Hook `SessionStart`: detecta el stack
 
-Busca Firebase, Supabase, móvil (Expo, React Native, Capacitor), escritorio (Electron, Tauri), Stripe, Next, frameworks de API, SDKs de LLM, Python y Docker en la raíz del proyecto y en sus subcarpetas directas.
+Busca Firebase, Supabase, móvil (Expo, React Native, Capacitor), escritorio (Electron, Tauri), Stripe, Next, frameworks de API, SDKs de LLM, Docker y los lenguajes Python, Go, Rust, Java y Kotlin, PHP, Ruby y .NET en la raíz del proyecto y en sus subcarpetas directas.
 
 - Si encuentra algo, inyecta dos líneas fijas con los estándares aplicables y un recordatorio de la skill. Nunca imprime contenido del repo.
 - Si no encuentra nada, no imprime nada.
@@ -256,7 +256,7 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 - **Umbral:** un caso `critical` (los que deben dar BLOCK, el de prompt injection y los que no deben activarse) pasa 3/3; el resto, al menos 2/3. Un caso que a veces falla sale como `flaky`.
 - Un caso pasa solo si la skill se carga, cita los controles esperados, nombra las palabras clave (con sinónimos) y el veredicto se deduce de su propia tabla: un P0 en NOT MET es BLOCK, y cualquier NOT MET o UNVERIFIED descarta PASS.
 - La ejecución escribe `summary.md`. Se copia a `docs/evals/<versión>.md` para comparar resultados entre versiones.
-- Coste: unos 9 $ por ejecución (15 casos × 3).
+- Coste: unos 18 $ por ejecución (28 casos × 3).
 
 ## Hoja de ruta
 
@@ -265,7 +265,9 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 | F0 | Skill `security-checklist`, referencias por estándar y hook `SessionStart` | Hecho, v0.1 |
 | F1 | Hook de aviso `PostToolUse`, con el formato de `security-guidance` (`hookSpecificOutput.additionalContext`). Sin él, la skill se activaba en unos 3 de cada 4 casos positivos de las evals | Hecho, v0.2.0 |
 | F1 | Skill `authz-tests`: la matriz y los tests de BOLA y BFLA | Planificado |
-| F1 | Skill `secure-design` y un `SECURITY-PROFILE.md` por proyecto | Planificado |
+| F1 | `SECURITY-PROFILE.md`: el checklist lo crea y lee los riesgos aceptados y las atestaciones de la rama por defecto | Hecho, v0.5.0 |
+| F1 | Skill `secure-design` (el modo diseño ya vive en el checklist) | Planificado |
+| F5 | Detección de más stacks, referencias de Go, Rust, JVM, PHP, Python, Ruby, .NET, nube, Supabase y LLM, y la skill `security-fix` | Hecho, v0.5.0 |
 | F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | Hecho, v0.4.0 |
 | F3 | Inteligencia de amenazas, versión manual (`/intel-review`) | Hecho |
 | F4 | Evals que miden la estabilidad: 3 repeticiones por caso, un umbral de release y el modelo fijado | Hecho, v0.4.3 y v0.4.4 |
@@ -274,7 +276,7 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 
 1. ~~Primero F2~~: hecho en la v0.4.0.
 2. Después `authz-tests`.
-3. Luego `secure-design` y `SECURITY-PROFILE.md`.
+3. Luego `secure-design`.
 
 No previsto: ejecutar las evals en la CI. Una ejecución completa cuesta unos 13 $, así que el mantenedor la lanza antes de un release que cambia una skill.
 
