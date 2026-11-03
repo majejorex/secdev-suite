@@ -61,6 +61,32 @@ La actualización automática viene desactivada para este marketplace, como para
 
 Para desarrollar sin instalar: `claude --plugin-dir /ruta/a/secdev-suite`.
 
+## Úsalo en el día a día
+
+No hay que ejecutar nada especial. Trabajas como siempre y preguntas con tus palabras, en español o en inglés. Estos son los cuatro momentos en los que compensa.
+
+| Cuándo | Qué escribes | Qué obtienes |
+|---|---|---|
+| **Antes de escribir una funcionalidad** | «Voy a añadir devoluciones de pedidos. ¿Qué controles de seguridad aplican?» | Modo *Design*: los controles que aplican y 2-5 casos de abuso concretos («un cliente cambia `orderId` y devuelve el pedido de otro»). Sin veredicto y todavía sin código. |
+| **Mientras programas** | Nada. | Si una edición toca auth, reglas, pagos, subidas, secretos…, el hook se lo recuerda al agente una vez, con los controles que hay que mirar, por ejemplo `payments and webhooks (P2-02)`. |
+| **Antes de abrir una PR** | «¿Podemos publicar esto?» o «Revisa la seguridad de este cambio». | Modo *Sign-off* sobre el diff: una línea `Verdict:` y una tabla con una fila por control que aplica, cada una con evidencia `archivo:línea`. |
+| **Antes de un release** | «Revisa la seguridad de todo el repo antes del release». | Lo mismo, pero aplican todos los P0. Lo que el código no puede demostrar (MFA en la consola cloud, backups, entornos separados) sale como ⚠️, con qué mirar y dónde. |
+
+### Cómo leer el resultado
+
+- **BLOCK**: falla un control P0. No publiques. Pide «arregla P0-02» (o varios a la vez) y vuelve a pasar la revisión.
+- **PASS WITH ISSUES**: no falla ningún P0, pero hay algo en ⚠️ o falla un P1/P2. Puedes publicar después de comprobar tú los ⚠️, normalmente en la consola cloud. Antes de un release, un P0 en ⚠️ necesita tu confirmación explícita.
+- **PASS**: todo lo que aplica se cumple o está justificado como N/A.
+
+La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuando el arreglo de un ❌ es evidente, viene en una línea, y los IDs (`P0-02`) te sirven para referirte a un hallazgo después.
+
+### Consejos
+
+- **Di el alcance** cuando no sea obvio: «este diff», «la carpeta `functions/`», «todo el repo».
+- **Desconfía de un ✅ sin evidencia.** Cada ✅ tiene que citar un `archivo:línea` o un test. Si no lo hace, pídelo.
+- **⚠️ no es un fallo.** Significa que el código no lo puede demostrar. Míralo donde indica el informe y cuéntale al agente lo que has visto.
+- **No es una auditoría.** Para buscar vulnerabilidades a fondo, usa `security-audit` o `claude-security` (ver más abajo).
+
 ## Cómo funciona
 
 <p align="center">
