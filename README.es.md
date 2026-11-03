@@ -61,6 +61,41 @@ La actualización automática viene desactivada para este marketplace, como para
 
 Para desarrollar sin instalar: `claude --plugin-dir /ruta/a/secdev-suite`.
 
+## Úsalo en cualquier proyecto
+
+Se instala una vez y funciona en cada proyecto que abras. No hay nada que configurar por proyecto.
+
+| Dónde lo quieres | Comando |
+|---|---|
+| En todos los proyectos de tu máquina (por defecto) | `claude plugin install secdev@secdev-suite` |
+| En un repo, para todo el que trabaje en él | `claude plugin install secdev@secdev-suite --scope project`. Escribe `enabledPlugins` en `.claude/settings.json` (ver abajo). |
+| En un repo, solo para ti | `claude plugin install secdev@secdev-suite --scope local` |
+
+Para un equipo, el `.claude/settings.json` del repo debe declarar también el marketplace, para que un compañero que nunca lo ha añadido reciba el plugin al confiar en la carpeta. El comando de instalación escribe solo la segunda clave, así que añade la primera a mano y sube el archivo:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "secdev-suite": { "source": { "source": "github", "repo": "majejorex/secdev-suite" } }
+  },
+  "enabledPlugins": { "secdev@secdev-suite": true }
+}
+```
+
+En un proyecto nuevo:
+
+1. **Ábrelo con Claude Code.** Si el proyecto usa un stack que conoce, verás `[secdev] Detected stack: ...`. Conoce Firebase, Supabase, Expo, React Native y Capacitor, Electron y Tauri, Stripe, Next, Express, Fastify, Hono, Koa y Nest, SDKs de LLM, Python y Docker. Con cualquier otro stack no dice nada, y las skills siguen funcionando con el checklist general de ASVS.
+2. **Trabaja como siempre.** Cuando una edición toca algo sensible (auth, reglas, pagos, subidas, secretos, workflows de CI, Dockerfiles...), el agente recibe un aviso con los controles que debe mirar.
+3. **Antes de una PR o de un release, pregunta** «¿Podemos publicar esto?» o «Revisa la seguridad de este cambio» (ver la sección siguiente).
+4. **Una vez por repo, pide** «Añade un gate de seguridad en CI». Te enseña el workflow y qué sale del repo, y escribe `.github/workflows/security.yml` solo cuando le das el OK. Después, en GitHub (Settings, Rules), exige los checks `secrets`, `dependencies` y `sast`. Hasta entonces solo avisan.
+5. **Comprueba que está cargado:** `claude plugin list` muestra `secdev@secdev-suite` y su versión.
+
+Conviene saber:
+
+- El gate es para GitHub Actions. Con otro proveedor de CI, la skill te da los tres comandos.
+- Si la primera ejecución encuentra un secreto en el historial, primero rota el secreto y después purga el historial. Semgrep imprime la línea que marca, así que un secreto filtrado también queda en el registro de la CI, y purgar el historial no borra ese registro.
+- Para quitarlo: `claude plugin uninstall secdev@secdev-suite` (añade `--scope project` si lo instalaste así). Para dejarlo y apagar solo la comprobación diaria de versión, define `SECDEV_NO_UPDATE_CHECK=1`.
+
 ## Úsalo en el día a día
 
 No hay que ejecutar nada especial. Trabajas como siempre y preguntas con tus palabras, en español o en inglés. Estos son los cuatro momentos en los que compensa.
@@ -157,6 +192,7 @@ Escribe `.github/workflows/security.yml` con tres jobs que bloquean. Pídelo con
 - **Enseña antes de escribir:** dice qué sale del repo (nombres de paquetes a osv.dev, descarga de reglas de Semgrep) y solo escribe el archivo cuando le das el OK.
 - **Te queda un paso:** marcar los tres jobs como checks obligatorios en la protección de rama. Hasta entonces solo avisan.
 - **Ejecutar ahora:** también puede pasar las tres herramientas en local una vez, con tu permiso. Ordena los CVEs primero por CISA KEV y luego por EPSS.
+- **Límite:** Semgrep imprime la línea que marca, así que un secreto en el código también acaba en el registro de la CI (gitleaks lo oculta). Rota un secreto filtrado antes que nada.
 - **Probado en casa:** este repo usa el mismo workflow, y un test lo mantiene idéntico a la plantilla de la skill. En su primera ejecución encontró dos caracteres Unicode bidireccionales ocultos en nuestros propios tests.
 
 ### Qué no hace
@@ -232,13 +268,15 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 | F1 | Skill `secure-design` y un `SECURITY-PROFILE.md` por proyecto | Planificado |
 | F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | Hecho, v0.4.0 |
 | F3 | Inteligencia de amenazas, versión manual (`/intel-review`) | Hecho |
-| F4 | Evals automáticas: tasa de activación y falsos positivos | Planificado |
+| F4 | Evals que miden la estabilidad: 3 repeticiones por caso, un umbral de release y el modelo fijado | Hecho, v0.4.3 y v0.4.4 |
 
 **Orden decidido el 2026-11-02:**
 
 1. ~~Primero F2~~: hecho en la v0.4.0.
 2. Después `authz-tests`.
 3. Luego `secure-design` y `SECURITY-PROFILE.md`.
+
+No previsto: ejecutar las evals en la CI. Una ejecución completa cuesta unos 13 $, así que el mantenedor la lanza antes de un release que cambia una skill.
 
 El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora. `osv-scanner` cubre los CVEs, y el resto (paquetes abandonados, publicadores, scripts de instalación) se revisará ahora que F2 está funcionando.
 

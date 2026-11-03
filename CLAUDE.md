@@ -11,5 +11,6 @@ Claude Code plugin (`secdev`) and its marketplace. Read `README.md` to see what 
 - **Commits**: use the maintainer identity, already set in `git config --local`. Account and credential details are in `CLAUDE.local.md`, which is not versioned.
 - Versions follow semver in `.claude-plugin/plugin.json`. Bump it when a skill or a hook changes, and create the tag `vX.Y.Z`. What is installed is updated by hand, reviewing the diff of `hooks/` between tags (README, "Update safely").
 - A change in `hooks/` is code that will run in every session of the user: do not push it until the user has seen it.
-- Before a release that changes the skill, run `node evals/run.mjs <folder-outside-the-repo>`. It costs money, so ask the user for permission.
+- Before a release that changes a skill, run `node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3`. The gate (critical cases 3/3, the rest at least 2/3) must pass; copy `summary.md` to `docs/evals/vX.Y.Z.md`. It costs about $13, so ask the user for permission.
+- `main` requires the checks `test`, `secrets`, `dependencies` and `sast` (ruleset, no bypass): merge only when all four are green.
 - The checklist lives in `SKILL.md`, not in `references/`: plugin files sit outside the project and reading them may ask for permission. What is essential must be in `SKILL.md`.
