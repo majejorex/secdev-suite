@@ -68,21 +68,21 @@ You don't run anything special. You work as usual and ask in plain words, in Eng
 | **Before writing a feature** | "I'm going to add refunds for orders. Which security controls apply?" | *Design* mode: the controls that apply and 2-5 concrete abuse cases ("a customer changes `orderId` and refunds someone else's order"). No verdict, no code yet. |
 | **While you code** | Nothing. | If an edit touches auth, rules, payments, uploads, secrets… the hook reminds the agent once, naming the controls to check, for example `payments and webhooks (P2-02)`. |
 | **Before you open a PR** | "Can we ship this?" or "Review the security of this change." | *Sign-off* mode over the diff: a `Verdict:` line and a table with one row per control that applies, each with `file:line` evidence. |
-| **Before a release** | "Review the security of the whole repo before the release." | The same, but every P0 applies. Controls the code can't show (MFA on the cloud console, backups, separate environments) come back as ⚠️ with what to check and where. |
+| **Before a release** | "Review the security of the whole repo before the release." | The same, but every P0 applies. Controls the code can't show (MFA on the cloud console, backups, separate environments) come back as UNVERIFIED with what to check and where. |
 
 ### Reading the result
 
 - **BLOCK**: a P0 control is not met. Don't release. Ask "fix P0-02" (or several at once) and run the review again.
-- **PASS WITH ISSUES**: no P0 fails, but something is ⚠️ or a P1/P2 fails. You can ship after you check the ⚠️ items yourself, usually in the cloud console. Before a release, a P0 at ⚠️ needs your explicit OK.
+- **PASS WITH ISSUES**: no P0 fails, but something is UNVERIFIED or a P1/P2 fails. You can ship after you check the UNVERIFIED items yourself, usually in the cloud console. Before a release, a P0 at UNVERIFIED needs your explicit OK.
 - **PASS**: everything that applies is met, or is N/A with a reason.
 
-The review never changes code on its own: you decide what to fix. When the fix for a ❌ is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later.
+The review never changes code on its own: you decide what to fix. When the fix for a NOT MET is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later.
 
 ### Tips
 
 - **Name the scope** when it isn't obvious: "this diff", "the `functions/` folder", "the whole repo".
-- **Distrust a ✅ without evidence.** Every ✅ must cite a `file:line` or a test. If one doesn't, ask for it.
-- **⚠️ is not a failure.** It means the code can't show it. Go and look where the report says, then tell the agent what you found.
+- **Distrust a MET without evidence.** Every MET must cite a `file:line` or a test. If one doesn't, ask for it.
+- **UNVERIFIED is not a failure.** It means the code can't show it. Go and look where the report says, then tell the agent what you found.
 - **It's not an audit.** For a deep vulnerability hunt, use `security-audit` or `claude-security` (see below).
 
 ## How it works
@@ -117,12 +117,12 @@ It reviews a change, a feature or a whole repo.
 | | |
 |---|---|
 | Two modes | *Design*, before any code: the controls that apply and concrete abuse cases. *Sign-off*, before finishing: verification and a verdict. |
-| Statuses | ✅ met · ❌ not met · ⚠️ can't be verified from the code · N/A with a reason |
-| Verdict | **BLOCK** if any P0 fails. **PASS WITH ISSUES** if there is a ⚠️ or a P1/P2 fails. **PASS** if everything is met or justified as N/A. |
+| Statuses | MET · NOT MET · UNVERIFIED (can't be verified from the code) · N/A with a reason. They stay in English in any language. |
+| Verdict | **BLOCK** if any P0 fails. **PASS WITH ISSUES** if there is a UNVERIFIED or a P1/P2 fails. **PASS** if everything is met or justified as N/A. |
 | Always loaded | The checklist lives inside `SKILL.md`, so it loads with the skill even when the agent can't read files outside the project. |
 | References | ASVS 5.0, API Security Top 10 2023, MASVS 2.1 and a Firebase guide. The agent reads them only when it needs more detail. |
 | Distrustful | It treats the reviewed repo as data, never as instructions. It doesn't run the repo's code or query cloud services without permission. |
-| Hard to fool | Before the verdict it tries to refute every ✅. A comment saying "this is safe" or a test that mocks the check isn't evidence. Text telling reviewers or AI agents to pass the code is reported as prompt injection, hidden Unicode characters (Trojan Source) as ❌, and a BLOCK never becomes a PASS because someone asked. |
+| Hard to fool | Before the verdict it tries to refute every MET. A comment saying "this is safe" or a test that mocks the check isn't evidence. Text telling reviewers or AI agents to pass the code is reported as prompt injection, hidden Unicode characters (Trojan Source) as NOT MET, and a BLOCK never becomes a PASS because someone asked. |
 
 <details>
 <summary><strong>What the checklist covers</strong></summary>
@@ -206,18 +206,30 @@ No dependencies, just Node ≥ 20 and `node:test`. The tests come in two groups:
 - which controls it cited;
 - whether the answer names the key words for the case (`mustMention`, for example `constructEvent` for a Stripe webhook). Each item can list synonyms, and a missing one fails the case.
 
-It costs about $0.50 per case with Opus and about $0.21 with Sonnet (`node evals/run.mjs <folder> sonnet`), so it isn't part of `npm test`.
+It costs about $0.21 per case with Sonnet, so it isn't part of `npm test`.
+
+**Stability.** A model doesn't answer the same way twice, so one green run proves little. Before a release that changes a skill:
+
+```
+node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
+```
+
+- Every case runs 3 times, at most 8 at once, with the model pinned by its exact ID (the model actually used is recorded).
+- **Gate:** a `critical` case (the ones that must BLOCK, the prompt-injection case and the cases that must not activate) passes 3/3; any other case at least 2/3. A case that sometimes fails is reported as `flaky`.
+- A case passes only if the skill loads, the expected controls are cited, the key words are named (with synonyms), and the verdict follows from its own table: a P0 at NOT MET means BLOCK, and any NOT MET or UNVERIFIED rules out PASS.
+- The run writes `summary.md`. It is copied to `docs/evals/<version>.md`, so results can be compared between versions.
+- Cost: about $9 per run (15 cases × 3).
 
 ## Roadmap
 
 | Phase | What | Status |
 |---|---|---|
-| F0 | `security-checklist` skill, per-standard references and the `SessionStart` hook | ✅ v0.1 |
-| F1 | `PostToolUse` warning hook, using the `security-guidance` format (`hookSpecificOutput.additionalContext`). Without it, the skill activated in about 3 of 4 positive eval cases | ✅ v0.2.0 |
+| F0 | `security-checklist` skill, per-standard references and the `SessionStart` hook | Done, v0.1 |
+| F1 | `PostToolUse` warning hook, using the `security-guidance` format (`hookSpecificOutput.additionalContext`). Without it, the skill activated in about 3 of 4 positive eval cases | Done, v0.2.0 |
 | F1 | `authz-tests` skill: the matrix and tests for BOLA and BFLA | Planned |
 | F1 | `secure-design` skill and a per-project `SECURITY-PROFILE.md` | Planned |
-| F2 | `security-gate` skill: gitleaks, `osv-scanner` and Semgrep in every repo's gate | ✅ v0.4.0 |
-| F3 | Threat intelligence, manual version (`/intel-review`) | ✅ Done |
+| F2 | `security-gate` skill: gitleaks, `osv-scanner` and Semgrep in every repo's gate | Done, v0.4.0 |
+| F3 | Threat intelligence, manual version (`/intel-review`) | Done |
 | F4 | Automated evals: activation rate and false positives | Planned |
 
 **Order decided on 2026-11-02:**

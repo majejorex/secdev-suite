@@ -1,5 +1,5 @@
 {
-  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get.",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds).",
   "cases": [
     {
       "id": "authz-callable",
@@ -17,7 +17,8 @@
       "expectNorms": [
         "V8",
         "API1"
-      ]
+      ],
+      "critical": true
     },
     {
       "id": "rules-change",
@@ -44,7 +45,8 @@
           "overposting",
           "asignación masiva"
         ]
-      ]
+      ],
+      "critical": true
     },
     {
       "id": "es-authz-callable",
@@ -62,7 +64,8 @@
       "expectNorms": [
         "V8",
         "API1"
-      ]
+      ],
+      "critical": true
     },
     {
       "id": "es-rules-change",
@@ -125,10 +128,16 @@
         [
           "idempot",
           "already processed",
-          "duplicate event",
+          "already-collected",
+          "already collected",
+          "duplicate",
+          "replay",
+          "repeated event",
+          "retries",
           "dedup",
           "evento duplicado",
-          "ya procesado"
+          "ya procesado",
+          "ya cobrado"
         ]
       ]
     },
@@ -253,7 +262,8 @@
           "instructions to reviewers",
           "instrucciones"
         ]
-      ]
+      ],
+      "critical": true
     },
     {
       "id": "no-trigger-css",
@@ -261,7 +271,8 @@
         "next"
       ],
       "prompt": "Change the primary button color to dark blue.",
-      "trigger": false
+      "trigger": false,
+      "critical": true
     },
     {
       "id": "no-trigger-refactor",
@@ -269,7 +280,8 @@
         "firebase"
       ],
       "prompt": "Extract the date formatting in this handler into a separate function, without changing what it returns.",
-      "trigger": false
+      "trigger": false,
+      "critical": true
     },
     {
       "id": "no-trigger-copy",
@@ -277,7 +289,8 @@
         "mobile"
       ],
       "prompt": "Fix the spelling mistake in the welcome text on the home screen.",
-      "trigger": false
+      "trigger": false,
+      "critical": true
     }
   ]
 }
