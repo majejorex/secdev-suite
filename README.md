@@ -38,6 +38,18 @@ You ask your agent for order refunds. It writes them, the tests pass, and it tel
 
 secdev runs that check. It detects your stack when the session starts, warns you when an edit touches something sensitive, and before the task is closed it goes through the checklist one control at a time. Every control needs evidence, either a `file:line` or a test, so the verdict at the end can be checked later.
 
+## Can I trust it?
+
+You are installing code that runs in every session, so here is what you can check yourself:
+
+- **Small and readable.** Zero dependencies, only Node and `node:test`. The hooks are a few short files in [`hooks/`](hooks/); the skills are Markdown.
+- **Hooks that stay out of the way.** Each one exits 0, runs in under 1 second, prints at most 5 lines and prints nothing when there is nothing to say. They remind; they never block. Every hook has tests.
+- **One network call.** At most once a day, a background process reads the public `plugin.json` to tell you about a new version. It sends nothing about your project and can be switched off with `SECDEV_NO_UPDATE_CHECK=1`.
+- **The reviewed repo is data.** The skills treat comments and docs in the repo as data, report text aimed at the reviewer as a finding (prompt injection), and never run code from the repo you review.
+- **Standards copied, not remembered.** OWASP IDs and titles are copied from the official repositories, with the date they were checked.
+- **Measured, not claimed.** Each release that changes a skill runs the [evals](docs/evals/) on a pinned model, 3 times per case. Critical cases must pass every time.
+- **Protected releases.** `main` needs the checks `test`, `secrets`, `dependencies` and `sast`, and the `v*` tags cannot be moved. See [Updating safely](#updating-safely) to review the `hooks/` diff before each update.
+
 ## Install
 
 In Claude Code:
@@ -291,6 +303,16 @@ Trail of Bits' `supply-chain-risk-auditor` isn't installed for now. `osv-scanner
 - Still open: whether to schedule it weekly.
 
 </details>
+
+## Help it get better
+
+The most useful thing you can do is try it on a project that is not Firebase or JavaScript and tell what it got wrong.
+
+- **A wrong result** (a false positive, a missed finding, a verdict that does not follow from the table): [open an issue](https://github.com/majejorex/secdev-suite/issues/new/choose) with the smallest example you can share.
+- **A stack or platform it does not know:** the same link, "Stack or platform request".
+- **Questions, ideas, how it compares to other tools:** [Discussions](https://github.com/majejorex/secdev-suite/discussions).
+- **Review the checklist itself.** Disagree with a control, its "how to verify" or its standard? That is a good issue. Every control cites the OWASP source it comes from.
+- If it was useful, a star helps other people find it.
 
 ## Contributing
 

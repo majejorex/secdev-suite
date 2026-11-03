@@ -40,6 +40,18 @@ Le pides a tu agente devoluciones de pedidos. Las escribe, los tests pasan y te 
 
 secdev hace esa comprobación. Detecta tu stack al empezar la sesión, te avisa cuando una edición toca algo sensible y, antes de cerrar la tarea, recorre el checklist control a control. Cada control necesita evidencia, un `archivo:línea` o un test, para que el veredicto final se pueda comprobar después.
 
+## ¿Puedo fiarme?
+
+Instalas código que corre en todas tus sesiones, así que esto es lo que puedes comprobar tú mismo:
+
+- **Pequeño y legible.** Cero dependencias, solo Node y `node:test`. Los hooks son unos pocos archivos cortos en [`hooks/`](hooks/); las skills son Markdown.
+- **Hooks que no molestan.** Cada uno termina con exit 0, tarda menos de 1 segundo, imprime como mucho 5 líneas y no imprime nada si no hay nada que decir. Recuerdan, nunca bloquean. Todos tienen tests.
+- **Una sola llamada de red.** Como mucho una vez al día, un proceso en segundo plano lee el `plugin.json` público para avisarte de una versión nueva. No envía nada de tu proyecto y se apaga con `SECDEV_NO_UPDATE_CHECK=1`.
+- **El repo revisado es dato.** Las skills tratan los comentarios y la documentación del repo como datos, cuentan como hallazgo el texto dirigido al revisor (prompt injection) y nunca ejecutan código del repo que revisan.
+- **Estándares copiados, no recordados.** Los IDs y títulos de OWASP se copian de los repositorios oficiales, con la fecha de comprobación.
+- **Medido, no afirmado.** Cada versión que cambia una skill pasa los [evals](docs/evals/) con un modelo fijado, 3 veces por caso. Los casos críticos tienen que pasar siempre.
+- **Releases protegidos.** `main` exige los checks `test`, `secrets`, `dependencies` y `sast`, y las etiquetas `v*` no se pueden mover. Mira [Actualizar con seguridad](#actualizar-con-seguridad) para revisar el diff de `hooks/` antes de cada actualización.
+
 ## Instalación
 
 En Claude Code:
@@ -293,6 +305,16 @@ El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora. `osv-sc
 - Pendiente: decidir si se programa semanalmente.
 
 </details>
+
+## Ayúdame a mejorarlo
+
+Lo más útil que puedes hacer es probarlo en un proyecto que no sea Firebase ni JavaScript y contarme en qué se equivocó.
+
+- **Un resultado equivocado** (un falso positivo, un hallazgo que se escapa, un veredicto que no sale de la tabla): [abre un issue](https://github.com/majejorex/secdev-suite/issues/new/choose) con el ejemplo más pequeño que puedas compartir.
+- **Un stack o plataforma que no conoce:** el mismo enlace, «Stack or platform request».
+- **Preguntas, ideas, comparaciones con otras herramientas:** [Discussions](https://github.com/majejorex/secdev-suite/discussions).
+- **Revisa el checklist en sí.** ¿No estás de acuerdo con un control, con su «cómo verificar» o con su estándar? Es un buen issue. Cada control cita la fuente de OWASP de la que sale.
+- Si te fue útil, una estrella ayuda a que otros lo encuentren.
 
 ## Contribuir
 
