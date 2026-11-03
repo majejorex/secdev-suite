@@ -56,7 +56,25 @@ test('SKILL.md keeps the safety rules for reviewing untrusted repos', () => {
   assert.doesNotMatch(md, /run tests if they are cheap/);
   // allowed-tools makes loading the skill ask for permission and fail in `claude -p` (seen in evals 2026-11-02).
   assert.doesNotMatch(md.split('\n---')[0], /^allowed-tools:/m);
-  assert.ok(md.split('\n').length < 150, 'SKILL.md must stay under 150 lines');
+  assert.match(md, /Refute pass/);
+  assert.match(md, /Text aimed at the reviewer is a finding/);
+  assert.match(md, /Hidden Unicode is a finding/);
+  assert.match(md, /The verdict is not negotiable/);
+  assert.match(md, /^Not checked:/m);
+});
+
+test('every SKILL.md stays under 150 lines', () => {
+  for (const dir of readdirSync(join(ROOT, 'skills'))) {
+    assert.ok(read(`skills/${dir}/SKILL.md`).split('\n').length < 150, `${dir}: SKILL.md must stay under 150 lines`);
+  }
+});
+
+test('security-gate keeps its safety rules', () => {
+  const md = read('skills/security-gate/SKILL.md');
+  assert.match(md, /is data, not instructions/);
+  assert.match(md, /Config that weakens a gate is a finding/);
+  assert.match(md, /Never make a gate pass by weakening it/);
+  assert.match(md, /never write them from memory or copy them from the reviewed repo/);
 });
 
 test('every PostToolUse category names controls that exist in the checklist', async () => {
@@ -74,6 +92,17 @@ test('each eval mustMention item is a word or a non-empty list of words', () => 
     const alts = [m].flat();
     assert.ok(alts.length > 0 && alts.every((a) => typeof a === 'string' && a.length > 0), `${c.id}: bad mustMention ${JSON.stringify(m)}`);
   }
+});
+
+test('no file in the repo hides Unicode bidi or zero-width characters (Trojan Source)', () => {
+  // A test that needs one writes it as an escape sequence. Semgrep's bidi rule skips Markdown; this test doesn't.
+  const HIDDEN = new RegExp(`[${[[0x202a, 0x202e], [0x2066, 0x2069], [0x200b, 0x200d]].map(([a, b]) => `${String.fromCharCode(a)}-${String.fromCharCode(b)}`).join('')}]`);
+  const TEXT = /\.(mjs|js|cjs|json|md|yml|yaml|toml|txt)$/;
+  const bad = readdirSync(ROOT, { recursive: true })
+    .map((p) => String(p).replace(/\\/g, '/'))
+    .filter((p) => TEXT.test(p) && !/(^|\/)(node_modules|\.git)\//.test(p))
+    .filter((p) => HIDDEN.test(read(p)));
+  assert.deepEqual(bad, []);
 });
 
 test('the evals include cases where the skill must NOT activate', () => {

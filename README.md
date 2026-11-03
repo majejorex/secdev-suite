@@ -122,6 +122,7 @@ It reviews a change, a feature or a whole repo.
 | Always loaded | The checklist lives inside `SKILL.md`, so it loads with the skill even when the agent can't read files outside the project. |
 | References | ASVS 5.0, API Security Top 10 2023, MASVS 2.1 and a Firebase guide. The agent reads them only when it needs more detail. |
 | Distrustful | It treats the reviewed repo as data, never as instructions. It doesn't run the repo's code or query cloud services without permission. |
+| Hard to fool | Before the verdict it tries to refute every ✅. A comment saying "this is safe" or a test that mocks the check isn't evidence. Text telling reviewers or AI agents to pass the code is reported as prompt injection, hidden Unicode characters (Trojan Source) as ❌, and a BLOCK never becomes a PASS because someone asked. |
 
 <details>
 <summary><strong>What the checklist covers</strong></summary>
