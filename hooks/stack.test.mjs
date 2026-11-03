@@ -143,3 +143,47 @@ test('as a process: works when invoked through a junction or symlink', (t) => {
   assert.equal(r.status, 0);
   assert.match(r.stdout, /^\[secdev\]/m);
 });
+
+test('detects language tags from their manifest files', () => {
+  assert.deepEqual(detectStack(fixture({ 'go.mod': 'module x' })), ['go']);
+  assert.deepEqual(detectStack(fixture({ 'Cargo.toml': '[package]' })), ['rust']);
+  assert.deepEqual(detectStack(fixture({ 'pom.xml': '<project/>' })), ['jvm']);
+  assert.deepEqual(detectStack(fixture({ 'composer.json': '{}' })), ['php']);
+  assert.deepEqual(detectStack(fixture({ Gemfile: 'source "https://rubygems.org"' })), ['ruby']);
+  assert.deepEqual(detectStack(fixture({ Pipfile: '[packages]' })), ['python']);
+});
+
+test('detects frameworks named in non-JS manifests', () => {
+  assert.deepEqual(detectStack(fixture({ 'requirements.txt': 'fastapi==0.110\nopenai>=1\nstripe\n' })), ['api', 'llm', 'python', 'stripe']);
+  assert.deepEqual(detectStack(fixture({ 'go.mod': 'require github.com/gin-gonic/gin v1.9.0\nrequire github.com/stripe/stripe-go/v76 v76.0.0' })), ['api', 'go', 'stripe']);
+  assert.deepEqual(detectStack(fixture({ 'composer.json': '{"require":{"laravel/framework":"^11"}}' })), ['api', 'php']);
+  assert.deepEqual(detectStack(fixture({ 'pom.xml': '<artifactId>spring-boot-starter-web</artifactId>' })), ['api', 'jvm']);
+  assert.deepEqual(detectStack(fixture({ 'pyproject.toml': 'dependencies = ["firebase-admin", "supabase"]' })), ['firebase', 'python', 'supabase']);
+  assert.deepEqual(detectStack(fixture({ 'requirements.txt': 'requests\nnumpy\n' })), ['python']);
+});
+
+test('detects .NET by project file, also one folder down', () => {
+  assert.deepEqual(detectStack(fixture({ 'App.csproj': '<Project Sdk="Microsoft.NET.Sdk"/>' })), ['dotnet']);
+  assert.deepEqual(detectStack(fixture({ 'src/Api.csproj': '<Project Sdk="Microsoft.NET.Sdk.Web"/>' })), ['api', 'dotnet']);
+});
+
+test('manifests that are too big or are links are ignored', () => {
+  assert.deepEqual(detectStack(fixture({ 'requirements.txt': `${'x'.repeat(300_000)}\nfastapi` })), ['python']);
+  const dir = fixture({ 'real.txt': 'fastapi' });
+  try {
+    symlinkSync(join(dir, 'real.txt'), join(dir, 'requirements.txt'));
+  } catch (e) {
+    if (e.code === 'EPERM') return; // creating links needs privileges on Windows
+    throw e;
+  }
+  assert.deepEqual(detectStack(dir), []);
+});
+
+test('a folder with thousands of entries still answers in under a second', () => {
+  const files = { 'go.mod': 'module x' };
+  for (let i = 0; i < 2000; i++) files[`f${i}.txt`] = '';
+  const dir = fixture(files);
+  const t = Date.now();
+  detectStack(dir);
+  assert.ok(Date.now() - t < 1000);
+});

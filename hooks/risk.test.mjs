@@ -61,6 +61,12 @@ test('the negative cases from the evals do not warn', () => {
   assert.deepEqual(classify('README.md', 'password and stripe in a doc'), []);
 });
 
+test('SECURITY-PROFILE.md is the one markdown file that triggers a reminder', () => {
+  assert.deepEqual(classify('SECURITY-PROFILE.md', 'Updated: 2026-11-03'), ['security profile']);
+  assert.deepEqual(classify('app/SECURITY-PROFILE.md', ''), ['security profile']);
+  assert.deepEqual(classify('docs/NOT-SECURITY-PROFILE.md', ''), []);
+});
+
 test('Windows paths and MultiEdit', () => {
   assert.ok(classify('C:\\repo\\firestore.rules', '').includes('access rules'));
   assert.match(editedText({ edits: [{ new_string: 'a' }, { new_string: 'onCall(' }] }), /onCall\(/);

@@ -1,0 +1,52 @@
+name: Wrong result (false positive or missed finding)
+description: The checklist marked something it should not have, or missed something it should have caught.
+labels: ["review-quality"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful kind of report. Please do not paste secrets, tokens or private code: a tiny example that shows the problem is better.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What went wrong
+      options:
+        - A control was NOT MET but the code is fine (false positive)
+        - A control was MET but the code is vulnerable (missed finding)
+        - The verdict does not follow from the table
+        - The skill did not activate when it should have
+        - The skill activated when it should not have
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: secdev version
+      description: "`claude plugin list` shows it."
+    validations:
+      required: true
+  - type: input
+    id: stack
+    attributes:
+      label: Stack
+      description: "Language, framework, backend (for example: Go + gin, FastAPI + Postgres, Next + Supabase)."
+    validations:
+      required: true
+  - type: input
+    id: prompt
+    attributes:
+      label: What you asked
+      description: "For example: Can we ship this?"
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal example
+      description: The smallest code or config that reproduces it, and the row of the report (ID, status, evidence).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true

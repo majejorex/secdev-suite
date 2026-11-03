@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, missingMentions, verdictFrom, verdictConsistent, aggregate, summaryMarkdown } from './lib.mjs';
 
@@ -51,6 +51,22 @@ const FIX = {
     'app/globals.css': '.btn-primary { background: #3b82f6; color: white; }\n',
   },
 };
+FIX.go = {
+  "go.mod": "module example.com/shop\n\ngo 1.22\n\nrequire github.com/gin-gonic/gin v1.10.0\n",
+  "main.go": "package main\n\nimport \"github.com/gin-gonic/gin\"\n\nfunc authRequired(c *gin.Context) {\n\tif c.GetHeader(\"Authorization\") == \"\" {\n\t\tc.AbortWithStatus(401)\n\t\treturn\n\t}\n\tc.Next()\n}\n\nfunc getOrder(c *gin.Context) {\n\tvar o Order\n\tdb.First(&o, c.Param(\"id\"))\n\tc.JSON(200, o)\n}\n\nfunc main() {\n\tr := gin.Default()\n\tr.Use(authRequired)\n\tr.GET(\"/orders/:id\", getOrder)\n\tr.Run()\n}\n"
+};
+FIX.python = {
+  "requirements.txt": "fastapi==0.115.0\nuvicorn\n",
+  "app/main.py": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get(\"/health\")\ndef health():\n    return {\"ok\": True}\n"
+};
+FIX.supabase = {
+  "supabase/config.toml": "project_id = \"demo\"\n",
+  "supabase/migrations/001_init.sql": "create table public.notes (\n  id uuid primary key default gen_random_uuid(),\n  user_id uuid references auth.users not null,\n  body text not null\n);\n"
+};
+FIX.llm = {
+  "requirements.txt": "anthropic>=0.40\n",
+  "agent.py": "import subprocess\nimport anthropic\n\nclient = anthropic.Anthropic()\n\ndef run_task(page_text: str):\n    msg = client.messages.create(model=\"claude-sonnet-5-5\", max_tokens=1024,\n        messages=[{\"role\": \"user\", \"content\": \"Summarize and give a shell command to archive: \" + page_text}])\n    cmd = msg.content[0].text\n    return subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout\n"
+};
 FIX.firebase['functions/src/report.ts'] = "export function formatDate(d: Date) { return d.toISOString(); }\nexport function buildReport(data: { createdAt: Date; name: string }) {\n  const date = `${data.createdAt.getDate()}/${data.createdAt.getMonth() + 1}/${data.createdAt.getFullYear()}`;\n  return { name: data.name, date };\n}\n";
 
 function makeFixture(dir, stack) {
@@ -68,8 +84,16 @@ function run(c, i) {
     makeFixture(dir, c.stack);
     for (const [p, content] of Object.entries(c.files ?? {})) {
       mkdirSync(dirname(join(dir, p)), { recursive: true });
-      writeFileSync(join(dir, p), content);
+      // The fake key is built here, so no secret-shaped string sits in the repo (GitHub push protection).
+      writeFileSync(join(dir, p), content.replace('__FAKE_STRIPE_KEY__', 'sk_' + 'live_' + '51H' + 'x'.repeat(40)));
     }
+    // `git: true` commits the fixture, so a case can use the default branch (SECURITY-PROFILE.md is read from it).
+    if (c.git) {
+      const g = (...a) => spawnSync('git', ['-c', 'user.name=eval', '-c', 'user.email=eval@example.com', ...a], { cwd: dir });
+      g('init', '-q', '-b', 'main'); g('add', '-A'); g('commit', '-q', '-m', 'fixture');
+    }
+    // `expectChanged`: files the case must modify; their content is compared before and after the run.
+    const before = Object.fromEntries((c.expectChanged ?? []).map((p) => [p, existsSync(join(dir, p)) ? readFileSync(join(dir, p), 'utf8') : null]));
     const args = ['-p', c.prompt, '--plugin-dir', suite, '--output-format', 'stream-json', '--verbose',
       '--max-budget-usd', '1.5', '--permission-mode', 'acceptEdits',
       // Without it, `claude -p` denies reading references/ (outside the fixture) and the case fails for the wrong reason.
@@ -120,11 +144,12 @@ function run(c, i) {
       const missing = missingMentions(finalText, c.mustMention);
       const controls = (c.expectControls ?? []).filter((id) => !finalText.includes(id));
       const verdict = verdictFrom(finalText);
-      // Only the checklist gives a verdict, and it must follow from its own table.
-      const verdictOk = !c.trigger || want !== 'security-checklist' || verdictConsistent(finalText, verdict);
-      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk
+      // The checklist and the fix skill give a verdict, and it must follow from its own table.
+      const verdictOk = !c.trigger || c.noVerdict || !['security-checklist', 'security-fix'].includes(want) || verdictConsistent(finalText, verdict);
+      const notChanged = (c.expectChanged ?? []).filter((p) => (existsSync(join(dir, p)) ? readFileSync(join(dir, p), 'utf8') : null) === before[p]);
+      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk && notChanged.length === 0
         && missing.length === 0 && controls.length === 0 && (!c.expectVerdict || verdict === c.expectVerdict)));
-      resolve({ id: c.id, run: i, model: usedModel, expected: c.trigger, triggered, loaded, verdict, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
+      resolve({ id: c.id, run: i, model: usedModel, expected: c.trigger, triggered, loaded, verdict, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, notChanged, missingMentions: missing, missingControls: controls });
     });
   });
 }
@@ -140,7 +165,7 @@ await Promise.all(Array.from({ length: Math.min(CONCURRENCY, jobs.length) }, asy
 }));
 results.sort((a, b) => a.id.localeCompare(b.id) || a.run - b.run);
 writeFileSync(join(outDir, 'results.json'), JSON.stringify(results, null, 2));
-for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${`${r.id}#${r.run}`.padEnd(25)} expected=${r.expected} triggered=${r.triggered} loaded=${r.loaded} verdict=${r.verdict}${r.verdictOk ? '' : '(INCONSISTENT)'} hook=${r.hookSeen} reminder=${r.editReminder} refReads=${r.refReads} refErrors=${r.refErrors} cost=${r.cost} missingControls=${JSON.stringify(r.missingControls)} missingMentions=${JSON.stringify(r.missingMentions)}`);
+for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${`${r.id}#${r.run}`.padEnd(25)} expected=${r.expected} triggered=${r.triggered} loaded=${r.loaded} verdict=${r.verdict}${r.verdictOk ? '' : '(INCONSISTENT)'} hook=${r.hookSeen} reminder=${r.editReminder} refReads=${r.refReads} refErrors=${r.refErrors} cost=${r.cost} missingControls=${JSON.stringify(r.missingControls)} notChanged=${JSON.stringify(r.notChanged)} missingMentions=${JSON.stringify(r.missingMentions)}`);
 const rows = aggregate(results, cases, repeat);
 const { version } = JSON.parse(readFileSync(join(suite, '.claude-plugin/plugin.json'), 'utf8'));
 const models = [...new Set(results.map((r) => r.model).filter(Boolean))];

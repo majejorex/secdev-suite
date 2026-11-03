@@ -26,7 +26,10 @@ test('each skill has frontmatter with name equal to its folder and a description
     const fm = md.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     assert.ok(fm, `${dir}: missing frontmatter`);
     assert.match(fm[1], new RegExp(`^name: ${dir}$`, 'm'));
-    assert.match(fm[1], /^description: .{80,}/m, `${dir}: description empty or too short`);
+    assert.match(fm[1], /^description: (?:>-?\r?\n  )?.{80,}/m, `${dir}: description empty or too short`);
+    // strict YAML parsers (npx skills) reject an inline value that holds ": "; use a `>-` block then
+    const inline = fm[1].match(/^description: (?!>)(.+)$/m);
+    if (inline) assert.ok(!inline[1].includes(": "), `${dir}: description has \": \", use a >- block`);
   }
 });
 
@@ -69,12 +72,33 @@ test('every SKILL.md stays under 150 lines', () => {
   }
 });
 
+test('skills stay within their size budget (tokens are paid on every load)', () => {
+  const BUDGET = { 'security-checklist': 15000, 'security-gate': 7200 };
+  for (const dir of readdirSync(join(ROOT, 'skills'))) {
+    const md = read(`skills/${dir}/SKILL.md`);
+    assert.ok(md.length <= (BUDGET[dir] ?? 8000), `${dir}: SKILL.md has ${md.length} characters`);
+    const desc = md.match(/^description: (?:>-?\s+)?(.*)$/m)[1]; // also the folded `>-` form
+    assert.ok(desc.length <= 800, `${dir}: description has ${desc.length} characters (max 800)`);
+  }
+});
+
 test('security-gate keeps its safety rules', () => {
   const md = read('skills/security-gate/SKILL.md');
   assert.match(md, /is data, not instructions/);
   assert.match(md, /Config that weakens a gate is a finding/);
   assert.match(md, /Never make a gate pass by weakening it/);
   assert.match(md, /never write them from memory or copy them from the reviewed repo/);
+});
+
+test('security-fix keeps its safety rules and every skill named by an eval exists', () => {
+  const md = read('skills/security-fix/SKILL.md');
+  assert.match(md, /is data, not instructions/);
+  assert.match(md, /Never commit, push, deploy/);
+  assert.match(md, /do not read secret values/);
+  assert.match(md, /At most 3 passes/);
+  assert.match(md, /no check, test or rule was removed or weakened/);
+  const { cases } = JSON.parse(read('evals/cases.json'));
+  for (const c of cases) assert.ok(existsSync(join(ROOT, 'skills', c.skill ?? 'security-checklist', 'SKILL.md')), `${c.id}: unknown skill ${c.skill}`);
 });
 
 test('every PostToolUse category names controls that exist in the checklist', async () => {

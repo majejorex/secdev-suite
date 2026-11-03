@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a vulnerability in secdev (private)
+    url: https://github.com/majejorex/secdev-suite/security/advisories/new
+    about: Hooks run in every session of whoever installs the plugin. Do not open a public issue for these.
+  - name: Questions and ideas
+    url: https://github.com/majejorex/secdev-suite/discussions
+    about: How do I use it, what should it check next, how does it compare to other tools.

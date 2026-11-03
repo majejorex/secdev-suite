@@ -1,0 +1,29 @@
+name: Stack or platform request
+description: Ask for detection or review notes for a language, framework or platform.
+labels: ["stack"]
+body:
+  - type: input
+    id: stack
+    attributes:
+      label: Stack or platform
+      description: "For example: Elixir + Phoenix, Cloudflare Workers, Django, Kubernetes."
+    validations:
+      required: true
+  - type: textarea
+    id: signals
+    attributes:
+      label: How a project shows it uses this stack
+      description: "Manifest files and the names that appear in them (for example: mix.exs with phoenix)."
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Where the checklist controls usually fail in it
+      description: "Authorization, injection, sessions, secrets... with links to the official docs if you have them."
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help
+      options:
+        - label: I can open a pull request with the detection rule or the notes.

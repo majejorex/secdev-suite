@@ -1,5 +1,5 @@
 {
-  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds). 'readme-*' cases use the exact phrases of the README usage guide on a tiny project; they must load the checklist, not the gate.",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds). 'readme-*' cases use the exact phrases of the README usage guide on a tiny project; they must load the checklist, not the gate. 'noVerdict': the case gives no verdict (creating the profile). 'git': the fixture is a git repo with one commit on main. 'expectChanged': files the case must modify. Cases with the 'security-fix' skill expect its report; 'no-trigger-fix-bug' checks that a plain bug fix does not load it.",
   "cases": [
     {
       "id": "authz-callable",
@@ -357,6 +357,153 @@
         "mobile"
       ],
       "prompt": "Fix the spelling mistake in the welcome text on the home screen.",
+      "trigger": false,
+      "critical": true
+    },
+    {
+      "id": "go-gin-idor",
+      "stack": [
+        "go"
+      ],
+      "prompt": "Review the security of main.go before I open the PR.",
+      "trigger": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-02"
+      ],
+      "expectNorms": [
+        "API1"
+      ],
+      "critical": true
+    },
+    {
+      "id": "fastapi-endpoint",
+      "stack": [
+        "python"
+      ],
+      "prompt": "Add a PUT /users/{user_id} endpoint to app/main.py that updates the user profile with the JSON body. Tell me when it is ready for a PR.",
+      "trigger": true,
+      "expectControls": [
+        "P0-02",
+        "P0-05"
+      ]
+    },
+    {
+      "id": "supabase-rls",
+      "stack": [
+        "supabase"
+      ],
+      "prompt": "Review the security of the Supabase migration before I merge it.",
+      "trigger": true,
+      "expectControls": [
+        "P0-03"
+      ],
+      "mustMention": [
+        [
+          "RLS",
+          "row level security",
+          "row-level security"
+        ]
+      ]
+    },
+    {
+      "id": "llm-tool-shell",
+      "stack": [
+        "llm"
+      ],
+      "prompt": "Review the security of agent.py before the release.",
+      "trigger": true,
+      "expectControls": [
+        "P2-04"
+      ],
+      "mustMention": [
+        [
+          "prompt injection",
+          "inyección"
+        ]
+      ]
+    },
+    {
+      "id": "profile-create",
+      "stack": [
+        "firebase"
+      ],
+      "prompt": "Create the security profile for this project.",
+      "trigger": true,
+      "noVerdict": true,
+      "mustMention": [
+        "SECURITY-PROFILE.md"
+      ]
+    },
+    {
+      "id": "profile-accepted-risk",
+      "stack": [],
+      "git": true,
+      "files": {
+        "firebase.json": "{}\n",
+        "firestore.rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{doc=**} {\n      allow read, write: if true;\n    }\n  }\n}\n",
+        "SECURITY-PROFILE.md": "# Security profile\n\n## Accepted risks\n- P0-09 | rules open during the beta | accepted by the owner | 2026-10-01 | expires 2027-01-01\n"
+      },
+      "prompt": "Can we ship this?",
+      "trigger": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-09"
+      ],
+      "critical": true
+    },
+    {
+      "id": "fix-bola",
+      "skill": "security-fix",
+      "stack": [
+        "firebase"
+      ],
+      "files": {
+        "functions/src/orders.ts": "import { onCall, HttpsError } from 'firebase-functions/v2/https';\nimport { getFirestore } from 'firebase-admin/firestore';\n\nexport const getOrder = onCall(async (req) => {\n  if (!req.auth) throw new HttpsError('unauthenticated', 'login');\n  const snap = await getFirestore().doc(`orders/${req.data.orderId}`).get();\n  return snap.data();\n});\n"
+      },
+      "prompt": "Fix the P0 findings in functions/src/orders.ts. Go ahead without asking for confirmation of the plan.",
+      "trigger": true,
+      "expectChanged": [
+        "functions/src/orders.ts"
+      ],
+      "expectControls": [
+        "P0-02",
+        "P0-15"
+      ],
+      "critical": true
+    },
+    {
+      "id": "fix-secret",
+      "skill": "security-fix",
+      "stack": [
+        "firebase"
+      ],
+      "files": {
+        "functions/src/pay.ts": "import Stripe from 'stripe';\n\nconst stripe = new Stripe('__FAKE_STRIPE_KEY__');\n\nexport async function charge(amount: number, customer: string) {\n  return stripe.paymentIntents.create({ amount, currency: 'eur', customer });\n}\n"
+      },
+      "prompt": "Fix the secret problem in functions/src/pay.ts. Go ahead without asking for confirmation of the plan.",
+      "trigger": true,
+      "expectChanged": [
+        "functions/src/pay.ts"
+      ],
+      "expectControls": [
+        "P0-04"
+      ],
+      "mustMention": [
+        [
+          "rotat",
+          "rotar",
+          "rotación"
+        ]
+      ]
+    },
+    {
+      "id": "no-trigger-fix-bug",
+      "skill": "security-fix",
+      "stack": [
+        "firebase"
+      ],
+      "prompt": "Fix the date in buildReport in functions/src/report.ts so the day and the month always have two digits.",
       "trigger": false,
       "critical": true
     }
