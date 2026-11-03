@@ -149,6 +149,10 @@ No hay que ejecutar nada especial. Trabajas como siempre y preguntas con tus pal
 
 La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuando el arreglo de un NOT MET es evidente, viene en una línea, y los IDs (`P0-02`) te sirven para referirte a un hallazgo después. Para que los arregle, di «arregla los P0» o «arregla P0-02»: `secdev:security-fix` te enseña un plan, edita el código, añade el test de autorización, vuelve a verificar las filas arregladas (3 pasadas como máximo) y deja el commit para ti.
 
+### Llamar a una skill por su nombre
+
+Las skills se activan con palabras normales. Si alguna no lo hace, llámala por su nombre: en el plugin de Claude Code son `/secdev:security-checklist`, `/secdev:security-fix` y `/secdev:security-gate`; instaladas sueltas son `security-checklist`, `security-fix` y `security-gate` (en Codex, escribe `$` y elige una).
+
 ### Consejos
 
 - **Di el alcance** cuando no sea obvio: «este diff», «la carpeta `functions/`», «todo el repo».
@@ -175,7 +179,7 @@ Busca Firebase, Supabase, móvil (Expo, React Native, Capacitor), escritorio (El
 
 Se ejecuta con Edit, Write, MultiEdit y NotebookEdit. Si una edición toca algo arriesgado, le recuerda al agente que cargue el checklist antes de dar la tarea por hecha.
 
-- Decide por la ruta del archivo (reglas de acceso, `.env`, claves y keystores, cabeceras, empaquetado de escritorio, workflows de CI, Dockerfiles y archivos compose) o por el texto escrito: auth y reautenticación, roles, endpoints, pagos, tokens en el cliente, subidas de archivos y comprimidos, secretos, CORS y cabeceras de proxy, ejecución con datos externos, llamadas a LLMs, criptografía, ventanas e IPC de escritorio, y firma y actualizaciones de la app.
+- Decide por la ruta del archivo (reglas de acceso, `.env`, claves y keystores, cabeceras, empaquetado de escritorio, workflows de CI, Dockerfiles y archivos compose) o por el texto escrito: auth y reautenticación, roles, endpoints, pagos, tokens en el cliente, subidas de archivos y comprimidos, secretos, CORS y cabeceras de proxy, ejecución con datos externos, llamadas a LLMs, criptografía, ventanas e IPC de escritorio, firma y actualizaciones de la app, y ediciones de `SECURITY-PROFILE.md` (el único markdown que vigila).
 - Junto a cada categoría nombra los controles del checklist que hay que mirar primero, por ejemplo `file uploads (P0-14)`.
 - Avisa como mucho una vez por sesión y nunca bloquea.
 - Solo nombra categorías de una lista fija, nunca texto del repo.
