@@ -90,7 +90,7 @@ jobs:
           curl -sSfL -o osv-scanner "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64"
           echo "${OSV_SCANNER_SHA256}  osv-scanner" | sha256sum -c -
           chmod +x osv-scanner
-          ./osv-scanner scan -r .
+          ./osv-scanner scan --allow-no-lockfiles -r .
 
   sast:
     if: github.actor != 'dependabot[bot]'
@@ -118,7 +118,7 @@ Why it is shaped this way (checklist P1-10):
 1. **Ask first.** Running these tools reads the whole repo. osv-scanner sends package names and versions to osv.dev. Run only on the user's own repo.
 2. **Use what is installed; otherwise Docker.** Never install tools globally without asking.
    - `gitleaks git --redact -v .`
-   - `osv-scanner scan -r .`
+   - `osv-scanner scan --allow-no-lockfiles -r .`
    - `semgrep scan --config p/default --metrics=off`
 3. **Rank the dependency findings.**
    - In the CISA KEV catalog (`https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`, field `cveID`): fix first. Downloading the catalog sends nothing.
