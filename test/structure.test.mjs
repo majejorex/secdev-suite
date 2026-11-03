@@ -26,7 +26,10 @@ test('each skill has frontmatter with name equal to its folder and a description
     const fm = md.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     assert.ok(fm, `${dir}: missing frontmatter`);
     assert.match(fm[1], new RegExp(`^name: ${dir}$`, 'm'));
-    assert.match(fm[1], /^description: .{80,}/m, `${dir}: description empty or too short`);
+    assert.match(fm[1], /^description: (?:>-?\r?\n  )?.{80,}/m, `${dir}: description empty or too short`);
+    // strict YAML parsers (npx skills) reject an inline value that holds ": "; use a `>-` block then
+    const inline = fm[1].match(/^description: (?!>)(.+)$/m);
+    if (inline) assert.ok(!inline[1].includes(": "), `${dir}: description has \": \", use a >- block`);
   }
 });
 

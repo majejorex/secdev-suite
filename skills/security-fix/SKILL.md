@@ -1,6 +1,7 @@
 ---
 name: security-fix
-description: Fixes security findings and checks each fix. Use it only when the user asks to fix, correct or remediate a security problem: the findings or blocking rows of a secdev review ("fix P0-02", "fix 2 and 5", "fix the P0s", «arregla los P0»), or a named vulnerability such as a leaked secret, a missing owner check or open access rules ("fix the secret in pay.ts", «corrige la fuga de la clave»). Not for ordinary bugs or features, not for reviewing security (that is secdev:security-checklist) and not for scanner setup (secdev:security-gate).
+description: >-
+  Fixes security findings and checks each fix. Use it only when the user asks to fix, correct or remediate a security problem: the findings or blocking rows of a secdev review ("fix P0-02", "fix 2 and 5", "fix the P0s", «arregla los P0»), or a named vulnerability such as a leaked secret, a missing owner check or open access rules ("fix the secret in pay.ts", «corrige la fuga de la clave»). Not for ordinary bugs or features, not for reviewing security (that is secdev:security-checklist) and not for scanner setup (secdev:security-gate).
 ---
 
 # Security fix

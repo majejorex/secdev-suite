@@ -77,7 +77,7 @@ To develop without installing: `claude --plugin-dir /path/to/secdev-suite`.
 The three skills in [`skills/`](skills/) are plain `SKILL.md` files, so any agent that reads the open skill format can use them without the plugin. Requires Node.js 22.20+ for the installer ([`skills` CLI](https://github.com/vercel-labs/skills)):
 
 ```bash
-npx skills add majejorex/secdev-suite                                   # pick skills and agents
+npx skills add majejorex/secdev-suite --skill security-checklist --skill security-fix --skill security-gate   # the three skills
 npx skills add majejorex/secdev-suite --skill security-checklist -a codex   # one skill, one agent
 npx skills add majejorex/secdev-suite -g                                # every project, not just this one
 ```
@@ -86,6 +86,7 @@ Or copy a folder by hand into your agent's skills directory (for Claude Code, `~
 
 What you get and what you don't:
 
+- **Where it lands:** `.agents/skills/` in the project (Claude Code gets a symlink), or your home directory with `-g`. The list also shows `intel-review`: it is the maintainer's tool for this repo, skip it. Check with `npx skills list`.
 - **Same:** the checklist, the fix skill and the CI gate, triggered by the same plain-words requests ("Can we ship this?", "fix the P0s").
 - **Not included:** the two hooks (stack detection at session start, reminders on sensitive edits) and the daily version check. Those only exist in the Claude Code plugin. Without them, ask for the review yourself.
 - **Names:** the skills point to each other as `secdev:security-fix`. Installed standalone, the name is the folder name, `security-fix`.

@@ -1,6 +1,7 @@
 ---
 name: security-gate
-description: Sets up, or runs once, automated security scanners that block pull requests: gitleaks (leaked secrets), osv-scanner (vulnerable dependencies) and Semgrep (static analysis). Use it only when the user asks to add security scanning to CI, a security gate, secret scanning, dependency or CVE checks, or SAST, or to run those scanners (en español «añade un gate de seguridad», «escanea secretos», «revisa las dependencias vulnerables»). Not for "is it secure?", "can we ship or publish this?" or "review the security" of a change or a repo, even when the repo has no CI: those are secdev:security-checklist.
+description: >-
+  Sets up, or runs once, automated security scanners that block pull requests: gitleaks (leaked secrets), osv-scanner (vulnerable dependencies) and Semgrep (static analysis). Use it only when the user asks to add security scanning to CI, a security gate, secret scanning, dependency or CVE checks, or SAST, or to run those scanners (en español «añade un gate de seguridad», «escanea secretos», «revisa las dependencias vulnerables»). Not for "is it secure?", "can we ship or publish this?" or "review the security" of a change or a repo, even when the repo has no CI: those are secdev:security-checklist.
 ---
 
 # Security gate
