@@ -1,5 +1,7 @@
 node_modules/
 .omc/
+.playwright-mcp/
+.superpowers/
 *.log
 .DS_Store
 .env

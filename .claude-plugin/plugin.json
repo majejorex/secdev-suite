@@ -1,6 +1,6 @@
 {
   "name": "secdev",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "In-house security suite: P0/P1/P2 checklist with evidence, based on OWASP ASVS 5.0, API Security Top 10 2023 and MASVS 2.1, a CI security gate (gitleaks, osv-scanner, Semgrep) and stack detection at session start.",
   "author": {
     "name": "Manu Jordan",
