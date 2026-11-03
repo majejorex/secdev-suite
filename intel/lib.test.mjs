@@ -8,7 +8,7 @@ const FETCH = fileURLToPath(new URL('./fetch.mjs', import.meta.url));
 
 test('clean: removes tags, CDATA, entities and control characters, and truncates', () => {
   assert.equal(clean('<![CDATA[<b>Hello</b> &amp; goodbye]]>'), 'Hello & goodbye');
-  assert.equal(clean('a\u0000b‮c\nd'), 'a b c d');
+  assert.equal(clean('a\u0000b\u202Ec\nd'), 'a b c d');
   assert.equal(clean('&#x41;&#66;&#0;'), 'AB');
   assert.equal(clean('x'.repeat(300)).length, 200);
   assert.equal(clean(undefined), '');
@@ -43,7 +43,7 @@ test('clean: leaves no invisible text and no tags rebuilt from entities', () => 
 test('parseFeed: Atom links with entities are decoded and links with bidi characters are dropped', () => {
   const entry = (href) => `<feed><entry><title>t</title><link href="${href}"/><updated>2026-10-30T00:00:00Z</updated></entry></feed>`;
   assert.equal(parseFeed(entry('https://x.test/?a=1&amp;b=2'), 's', '2026-10-01')[0].url, 'https://x.test/?a=1&b=2');
-  assert.equal(parseFeed(entry('https://x.test/‮moc.live'), 's', '2026-10-01')[0], undefined);
+  assert.equal(parseFeed(entry('https://x.test/\u202Emoc.live'), 's', '2026-10-01')[0], undefined);
 });
 
 test('parseFeed: linear time on hostile feeds', () => {

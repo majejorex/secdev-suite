@@ -142,6 +142,22 @@ La lista completa, con cómo verificar cada control y su estándar, está en [sk
 
 </details>
 
+### 4 · Skill `secdev:security-gate`: bloquea PRs en CI
+
+Escribe `.github/workflows/security.yml` con tres jobs que bloquean. Pídelo con tus palabras: «añade un gate de seguridad en CI» o «escanea ahora el repo en busca de secretos».
+
+| Job | Herramienta | Falla cuando |
+|---|---|---|
+| `secrets` | gitleaks, todo el historial de git | algún commit contiene un secreto |
+| `dependencies` | osv-scanner, todos los lockfiles | una dependencia tiene una vulnerabilidad conocida no aceptada en `osv-scanner.toml` |
+| `sast` | Semgrep CE, `p/default`, sin métricas | hay cualquier hallazgo |
+
+- **Fijado y mínimo:** la única action es `actions/checkout`, fijada por SHA. gitleaks y osv-scanner son binarios de release comprobados con su SHA-256, Semgrep es una imagen fijada por digest y todos los jobs tienen `contents: read`. Funciona con la política de repo más estricta: «solo actions de GitHub» más «exigir SHA».
+- **Enseña antes de escribir:** dice qué sale del repo (nombres de paquetes a osv.dev, descarga de reglas de Semgrep) y solo escribe el archivo cuando le das el OK.
+- **Te queda un paso:** marcar los tres jobs como checks obligatorios en la protección de rama. Hasta entonces solo avisan.
+- **Ejecutar ahora:** también puede pasar las tres herramientas en local una vez, con tu permiso. Ordena los CVEs primero por CISA KEV y luego por EPSS.
+- **Probado en casa:** este repo usa el mismo workflow, y un test lo mantiene idéntico a la plantilla de la skill. En su primera ejecución encontró dos caracteres Unicode bidireccionales ocultos en nuestros propios tests.
+
 ### Qué no hace
 
 No sustituye a una auditoría. Para eso remite a:
@@ -200,17 +216,17 @@ Cuesta unos 0,50 $ por caso con Opus, así que no forma parte de `npm test`.
 | F1 | Hook de aviso `PostToolUse`, con el formato de `security-guidance` (`hookSpecificOutput.additionalContext`). Sin él, la skill se activaba en unos 3 de cada 4 casos positivos de las evals | ✅ v0.2.0 |
 | F1 | Skill `authz-tests`: la matriz y los tests de BOLA y BFLA | Planificado |
 | F1 | Skill `secure-design` y un `SECURITY-PROFILE.md` por proyecto | Planificado |
-| F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | Siguiente |
+| F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | ✅ v0.4.0 |
 | F3 | Inteligencia de amenazas, versión manual (`/intel-review`) | ✅ Hecho |
 | F4 | Evals automáticas: tasa de activación y falsos positivos | Planificado |
 
 **Orden decidido el 2026-11-02:**
 
-1. Primero F2. Lo que de verdad les falta a los repos que usan esto es un escáner de secretos y dependencias.
+1. ~~Primero F2~~: hecho en la v0.4.0.
 2. Después `authz-tests`.
 3. Luego `secure-design` y `SECURITY-PROFILE.md`.
 
-El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora. `osv-scanner` cubre los CVEs, y el resto (paquetes abandonados, publicadores, scripts de instalación) se revisará cuando F2 esté funcionando.
+El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora. `osv-scanner` cubre los CVEs, y el resto (paquetes abandonados, publicadores, scripts de instalación) se revisará ahora que F2 está funcionando.
 
 <details>
 <summary><strong>F3: cómo funciona <code>/intel-review</code></strong></summary>

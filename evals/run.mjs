@@ -71,6 +71,7 @@ function run(c) {
     p.on('close', () => {
       clearTimeout(timer);
       writeFileSync(join(outDir, `${c.id}.jsonl`), raw);
+      const want = c.skill ?? 'security-checklist'; // the skill this case expects to load
       const skills = [];
       const skillCalls = new Set(); // ids of calls to this skill, to know whether it loaded without error
       let loaded = false;
@@ -84,7 +85,7 @@ function run(c) {
         for (const b of m?.message?.content ?? []) {
           if (b.type === 'tool_use' && b.name === 'Skill') {
             skills.push(b.input?.skill);
-            if (String(b.input?.skill).includes('security-checklist')) skillCalls.add(b.id);
+            if (String(b.input?.skill).includes(want)) skillCalls.add(b.id);
           }
           if (b.type === 'tool_result' && skillCalls.has(b.tool_use_id) && !b.is_error) loaded = true;
           if (b.type === 'tool_use' && ['Read', 'Grep', 'Glob'].includes(b.name)) {
@@ -95,7 +96,7 @@ function run(c) {
         }
         if (m.type === 'result') { finalText = m.result ?? ''; cost = m.total_cost_usd; }
       }
-      const triggered = skills.some((s) => String(s).includes('security-checklist'));
+      const triggered = skills.some((s) => String(s).includes(want));
       const hookSeen = /\[secdev\] (Stack detectado|Detected stack)/.test(raw);
       // The `claude -p` stream does not show PostToolUse output: the reminder is detected through the
       // control file that hooks/post-edit.mjs leaves for that session.
@@ -107,7 +108,8 @@ function run(c) {
       const verdictRaw = (finalText.match(/(?:Verdict|Veredicto):\**\s*\**\s*(BLOCK|PASS WITH ISSUES|PASS|BLOQUEA|PASA CON PENDIENTES|PASA)/i) ?? [])[1]?.toUpperCase() ?? null;
       const verdict = { BLOQUEA: 'BLOCK', 'PASA CON PENDIENTES': 'PASS WITH ISSUES', PASA: 'PASS' }[verdictRaw] ?? verdictRaw;
       const p0Fail = /^\|\s*P0-\d\d\s*\|[^\n]*\|\s*❌\s*\|/m.test(finalText);
-      const verdictOk = !c.trigger || (verdict !== null && (!p0Fail || verdict === 'BLOCK'));
+      // Only the checklist gives a verdict.
+      const verdictOk = !c.trigger || want !== 'security-checklist' || (verdict !== null && (!p0Fail || verdict === 'BLOCK'));
       const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk));
       resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
     });
