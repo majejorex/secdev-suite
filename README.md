@@ -148,6 +148,10 @@ You don't run anything special. You work as usual and ask in plain words, in Eng
 
 The review never changes code on its own: you decide what to fix. When the fix for a NOT MET is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later. To have them fixed, say "fix the P0s" or "fix P0-02": `secdev:security-fix` shows a plan, edits the code, adds the authorization test, re-verifies the fixed rows (3 passes at most) and leaves the commit to you.
 
+### Calling a skill by name
+
+The skills activate from plain words. If one does not, call it by name: in the Claude Code plugin they are `/secdev:security-checklist`, `/secdev:security-fix` and `/secdev:security-gate`; installed standalone they are `security-checklist`, `security-fix` and `security-gate` (in Codex, type `$` and pick one).
+
 ### Tips
 
 - **Name the scope** when it isn't obvious: "this diff", "the `functions/` folder", "the whole repo".
@@ -174,7 +178,7 @@ It looks for Firebase, Supabase, mobile (Expo, React Native, Capacitor), desktop
 
 It runs on Edit, Write, MultiEdit and NotebookEdit. If an edit touches something risky, it reminds the agent to load the checklist before calling the task done.
 
-- It decides from the file path (access rules, `.env`, keys and keystores, headers, desktop packaging, CI workflows, Dockerfiles and compose files) or from the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, and app signing and updates.
+- It decides from the file path (access rules, `.env`, keys and keystores, headers, desktop packaging, CI workflows, Dockerfiles and compose files) or from the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, app signing and updates, and edits to `SECURITY-PROFILE.md` (the one markdown file it watches).
 - Next to each category it names the checklist controls to look at first, for example `file uploads (P0-14)`.
 - It warns at most once per session and never blocks.
 - It only names categories from a fixed list, never text from the repo.

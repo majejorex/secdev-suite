@@ -5,7 +5,7 @@
     "name": "majejorex",
     "url": "https://github.com/majejorex"
   },
-  "description": "Private marketplace for the secdev security suite.",
+  "description": "Marketplace for secdev: an evidence-based security checklist, fix skill and CI gate for coding agents.",
   "plugins": [
     {
       "name": "secdev",
