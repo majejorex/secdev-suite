@@ -57,6 +57,10 @@ function run(c) {
   return new Promise((resolve) => {
     const dir = join(outDir, 'fx', c.id);
     makeFixture(dir, c.stack);
+    for (const [p, content] of Object.entries(c.files ?? {})) {
+      mkdirSync(dirname(join(dir, p)), { recursive: true });
+      writeFileSync(join(dir, p), content);
+    }
     const args = ['-p', c.prompt, '--plugin-dir', suite, '--output-format', 'stream-json', '--verbose',
       '--max-budget-usd', '1.5', '--permission-mode', 'acceptEdits',
       // Without it, `claude -p` denies reading references/ (outside the fixture) and the case fails for the wrong reason.
@@ -112,7 +116,7 @@ function run(c) {
       const p0Fail = /^\|\s*P0-\d\d\s*\|[^\n]*\|\s*❌\s*\|/m.test(finalText);
       // Only the checklist gives a verdict.
       const verdictOk = !c.trigger || want !== 'security-checklist' || (verdict !== null && (!p0Fail || verdict === 'BLOCK'));
-      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk && missing.length === 0));
+      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk && missing.length === 0 && (!c.expectVerdict || verdict === c.expectVerdict)));
       resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
     });
   });

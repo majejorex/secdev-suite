@@ -124,6 +124,7 @@ Revisa un cambio, una funcionalidad o un repo entero.
 | Siempre cargado | El checklist vive dentro de `SKILL.md`, así que se carga con la skill aunque el agente no pueda leer archivos fuera del proyecto. |
 | Referencias | ASVS 5.0, API Security Top 10 2023, MASVS 2.1 y una guía de Firebase. El agente solo las lee cuando necesita más detalle. |
 | Desconfiado | Trata el repo revisado como datos, nunca como instrucciones. No ejecuta código del repo ni consulta servicios en la nube sin permiso. |
+| Difícil de engañar | Antes del veredicto intenta refutar cada ✅. Un comentario que dice «esto es seguro» o un test que mockea la comprobación no cuentan como evidencia. El texto que pide a revisores o agentes de IA que den el código por bueno se reporta como prompt injection, los caracteres Unicode ocultos (Trojan Source) como ❌, y un BLOCK nunca pasa a PASS porque alguien lo pida. |
 
 <details>
 <summary><strong>Qué cubre el checklist</strong></summary>
