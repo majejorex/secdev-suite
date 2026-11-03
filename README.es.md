@@ -91,6 +91,8 @@ Qué tienes y qué no:
 - **Igual:** el checklist, la skill de arreglos y el gate de CI, con las mismas peticiones en lenguaje normal («¿podemos publicar esto?», «arregla los P0»).
 - **No incluido:** los dos hooks (detección del stack al iniciar y avisos al editar algo sensible) ni la comprobación diaria de versión. Eso solo existe en el plugin de Claude Code. Sin ellos, pide tú la revisión.
 - **Nombres:** las skills se citan como `secdev:security-fix`. Instaladas sueltas, el nombre es el de la carpeta, `security-fix`.
+- **Úsalo:** abre tu agente en el proyecto y pide en lenguaje normal: «¿podemos publicar esto?», «revisa la seguridad de este cambio», «arregla P0-02», «añade un gate de seguridad a CI». Si tu agente lista las skills (Claude Code `/skills`, Codex `$`), elige `security-checklist` por su nombre. La primera respuesta debe acabar con una línea `Verdict:` y una tabla con un `file:line` por control; si no es así, la skill no se cargó.
+- **Comprueba la instalación:** `npx skills list` muestra las tres skills y dónde están. Probado el 2026-11-03 con `-a claude-code -a codex`.
 - **Actualizar:** `npx skills update`. Revisa antes el diff, como en [Actualizar con seguridad](#actualizar-con-seguridad).
 
 ## Úsalo en cualquier proyecto

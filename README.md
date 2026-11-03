@@ -90,6 +90,8 @@ What you get and what you don't:
 - **Same:** the checklist, the fix skill and the CI gate, triggered by the same plain-words requests ("Can we ship this?", "fix the P0s").
 - **Not included:** the two hooks (stack detection at session start, reminders on sensitive edits) and the daily version check. Those only exist in the Claude Code plugin. Without them, ask for the review yourself.
 - **Names:** the skills point to each other as `secdev:security-fix`. Installed standalone, the name is the folder name, `security-fix`.
+- **Use it:** open your agent in the project and ask in plain words: "Can we ship this?", "Review the security of this change", "fix P0-02", "Add a security gate to CI". If your agent lists skills (Claude Code `/skills`, Codex `$`), pick `security-checklist` by name. The first answer must end with a `Verdict:` line and a table with one `file:line` per control; if it does not, the skill was not loaded.
+- **Check the install:** `npx skills list` shows the three skills and where they live. Tested on 2026-11-03 with `-a claude-code -a codex`.
 - **Updates:** `npx skills update`. Review the diff first, as in [Updating safely](#updating-safely).
 
 ## Use it in any project
