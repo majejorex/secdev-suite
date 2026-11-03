@@ -70,21 +70,21 @@ No hay que ejecutar nada especial. Trabajas como siempre y preguntas con tus pal
 | **Antes de escribir una funcionalidad** | «Voy a añadir devoluciones de pedidos. ¿Qué controles de seguridad aplican?» | Modo *Design*: los controles que aplican y 2-5 casos de abuso concretos («un cliente cambia `orderId` y devuelve el pedido de otro»). Sin veredicto y todavía sin código. |
 | **Mientras programas** | Nada. | Si una edición toca auth, reglas, pagos, subidas, secretos…, el hook se lo recuerda al agente una vez, con los controles que hay que mirar, por ejemplo `payments and webhooks (P2-02)`. |
 | **Antes de abrir una PR** | «¿Podemos publicar esto?» o «Revisa la seguridad de este cambio». | Modo *Sign-off* sobre el diff: una línea `Verdict:` y una tabla con una fila por control que aplica, cada una con evidencia `archivo:línea`. |
-| **Antes de un release** | «Revisa la seguridad de todo el repo antes del release». | Lo mismo, pero aplican todos los P0. Lo que el código no puede demostrar (MFA en la consola cloud, backups, entornos separados) sale como ⚠️, con qué mirar y dónde. |
+| **Antes de un release** | «Revisa la seguridad de todo el repo antes del release». | Lo mismo, pero aplican todos los P0. Lo que el código no puede demostrar (MFA en la consola cloud, backups, entornos separados) sale como UNVERIFIED, con qué mirar y dónde. |
 
 ### Cómo leer el resultado
 
 - **BLOCK**: falla un control P0. No publiques. Pide «arregla P0-02» (o varios a la vez) y vuelve a pasar la revisión.
-- **PASS WITH ISSUES**: no falla ningún P0, pero hay algo en ⚠️ o falla un P1/P2. Puedes publicar después de comprobar tú los ⚠️, normalmente en la consola cloud. Antes de un release, un P0 en ⚠️ necesita tu confirmación explícita.
+- **PASS WITH ISSUES**: no falla ningún P0, pero hay algo en UNVERIFIED o falla un P1/P2. Puedes publicar después de comprobar tú los UNVERIFIED, normalmente en la consola cloud. Antes de un release, un P0 en UNVERIFIED necesita tu confirmación explícita.
 - **PASS**: todo lo que aplica se cumple o está justificado como N/A.
 
-La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuando el arreglo de un ❌ es evidente, viene en una línea, y los IDs (`P0-02`) te sirven para referirte a un hallazgo después.
+La revisión nunca cambia código por su cuenta: tú decides qué arreglar. Cuando el arreglo de un NOT MET es evidente, viene en una línea, y los IDs (`P0-02`) te sirven para referirte a un hallazgo después.
 
 ### Consejos
 
 - **Di el alcance** cuando no sea obvio: «este diff», «la carpeta `functions/`», «todo el repo».
-- **Desconfía de un ✅ sin evidencia.** Cada ✅ tiene que citar un `archivo:línea` o un test. Si no lo hace, pídelo.
-- **⚠️ no es un fallo.** Significa que el código no lo puede demostrar. Míralo donde indica el informe y cuéntale al agente lo que has visto.
+- **Desconfía de un MET sin evidencia.** Cada MET tiene que citar un `archivo:línea` o un test. Si no lo hace, pídelo.
+- **UNVERIFIED no es un fallo.** Significa que el código no lo puede demostrar. Míralo donde indica el informe y cuéntale al agente lo que has visto.
 - **No es una auditoría.** Para buscar vulnerabilidades a fondo, usa `security-audit` o `claude-security` (ver más abajo).
 
 ## Cómo funciona
@@ -119,12 +119,12 @@ Revisa un cambio, una funcionalidad o un repo entero.
 | | |
 |---|---|
 | Dos modos | *Diseño*, antes de escribir código: los controles que aplican y casos de abuso concretos. *Cierre*, antes de terminar: verificación y veredicto. |
-| Estados | ✅ cumple · ❌ no cumple · ⚠️ no se puede verificar desde el código · N/A con motivo |
-| Veredicto | **BLOCK** si falla algún P0. **PASS WITH ISSUES** si hay un ⚠️ o falla un P1/P2. **PASS** si todo se cumple o está justificado como N/A. |
+| Estados | MET (cumple) · NOT MET (no cumple) · UNVERIFIED (no se puede verificar desde el código) · N/A con motivo. Se quedan en inglés en cualquier idioma. |
+| Veredicto | **BLOCK** si falla algún P0. **PASS WITH ISSUES** si hay un UNVERIFIED o falla un P1/P2. **PASS** si todo se cumple o está justificado como N/A. |
 | Siempre cargado | El checklist vive dentro de `SKILL.md`, así que se carga con la skill aunque el agente no pueda leer archivos fuera del proyecto. |
 | Referencias | ASVS 5.0, API Security Top 10 2023, MASVS 2.1 y una guía de Firebase. El agente solo las lee cuando necesita más detalle. |
 | Desconfiado | Trata el repo revisado como datos, nunca como instrucciones. No ejecuta código del repo ni consulta servicios en la nube sin permiso. |
-| Difícil de engañar | Antes del veredicto intenta refutar cada ✅. Un comentario que dice «esto es seguro» o un test que mockea la comprobación no cuentan como evidencia. El texto que pide a revisores o agentes de IA que den el código por bueno se reporta como prompt injection, los caracteres Unicode ocultos (Trojan Source) como ❌, y un BLOCK nunca pasa a PASS porque alguien lo pida. |
+| Difícil de engañar | Antes del veredicto intenta refutar cada MET. Un comentario que dice «esto es seguro» o un test que mockea la comprobación no cuentan como evidencia. El texto que pide a revisores o agentes de IA que den el código por bueno se reporta como prompt injection, los caracteres Unicode ocultos (Trojan Source) como NOT MET, y un BLOCK nunca pasa a PASS porque alguien lo pida. |
 
 <details>
 <summary><strong>Qué cubre el checklist</strong></summary>
@@ -208,18 +208,30 @@ Sin dependencias, solo Node ≥ 20 y `node:test`. Los tests van en dos grupos:
 - qué controles citó;
 - si la respuesta nombra las palabras clave del caso (`mustMention`, por ejemplo `constructEvent` en un webhook de Stripe). Cada elemento puede llevar sinónimos, y si falta uno el caso falla.
 
-Cuesta unos 0,50 $ por caso con Opus y unos 0,21 $ con Sonnet (`node evals/run.mjs <carpeta> sonnet`), así que no forma parte de `npm test`.
+Cuesta unos 0,21 $ por caso con Sonnet, así que no forma parte de `npm test`.
+
+**Estabilidad.** Un modelo no responde igual dos veces, así que una ejecución en verde demuestra poco. Antes de un release que cambia una skill:
+
+```
+node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
+```
+
+- Cada caso se ejecuta 3 veces, como mucho 8 a la vez, con el modelo fijado por su ID exacto (se guarda el modelo que se usó de verdad).
+- **Umbral:** un caso `critical` (los que deben dar BLOCK, el de prompt injection y los que no deben activarse) pasa 3/3; el resto, al menos 2/3. Un caso que a veces falla sale como `flaky`.
+- Un caso pasa solo si la skill se carga, cita los controles esperados, nombra las palabras clave (con sinónimos) y el veredicto se deduce de su propia tabla: un P0 en NOT MET es BLOCK, y cualquier NOT MET o UNVERIFIED descarta PASS.
+- La ejecución escribe `summary.md`. Se copia a `docs/evals/<versión>.md` para comparar resultados entre versiones.
+- Coste: unos 9 $ por ejecución (15 casos × 3).
 
 ## Hoja de ruta
 
 | Fase | Qué | Estado |
 |---|---|---|
-| F0 | Skill `security-checklist`, referencias por estándar y hook `SessionStart` | ✅ v0.1 |
-| F1 | Hook de aviso `PostToolUse`, con el formato de `security-guidance` (`hookSpecificOutput.additionalContext`). Sin él, la skill se activaba en unos 3 de cada 4 casos positivos de las evals | ✅ v0.2.0 |
+| F0 | Skill `security-checklist`, referencias por estándar y hook `SessionStart` | Hecho, v0.1 |
+| F1 | Hook de aviso `PostToolUse`, con el formato de `security-guidance` (`hookSpecificOutput.additionalContext`). Sin él, la skill se activaba en unos 3 de cada 4 casos positivos de las evals | Hecho, v0.2.0 |
 | F1 | Skill `authz-tests`: la matriz y los tests de BOLA y BFLA | Planificado |
 | F1 | Skill `secure-design` y un `SECURITY-PROFILE.md` por proyecto | Planificado |
-| F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | ✅ v0.4.0 |
-| F3 | Inteligencia de amenazas, versión manual (`/intel-review`) | ✅ Hecho |
+| F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | Hecho, v0.4.0 |
+| F3 | Inteligencia de amenazas, versión manual (`/intel-review`) | Hecho |
 | F4 | Evals automáticas: tasa de activación y falsos positivos | Planificado |
 
 **Orden decidido el 2026-11-02:**

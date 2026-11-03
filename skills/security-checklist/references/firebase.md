@@ -30,7 +30,7 @@ In Firebase, the security rules (Firestore, Storage, Realtime Database) **are** 
 - MFA (TOTP or SMS) required for staff. It requires upgrading to Firebase Authentication with Identity Platform. Check it on the server: in rules with `request.auth.token.firebase.sign_in_second_factor`, in functions with the same field of the decoded token. A UI-only requirement does not count.
 - Revocation: `revokeRefreshTokens` does not invalidate ID tokens already issued (valid for up to 1 h) and `onCall` does not check revocation. In sensitive functions, use `verifyIdToken(token, true)` or your own check. In rules, store a revocation marker and compare it with `request.auth.token.auth_time`.
 - Session persistence on the web: the SDK stores the refresh token in browser storage. ASVS 14.3.3 allows session tokens there. Own recommendation: with CSP and XSS defense.
-- Persistence in React Native: `getReactNativePersistence(AsyncStorage)` stores it in AsyncStorage, which is not encrypted. This is ⚠️: prefer an adapter over SecureStore, or write down the accepted risk.
+- Persistence in React Native: `getReactNativePersistence(AsyncStorage)` stores it in AsyncStorage, which is not encrypted. This is UNVERIFIED: prefer an adapter over SecureStore, or write down the accepted risk.
 - Authorized Auth domains limited to your own.
 
 ## Keys and configuration: P0-04, P0-10, P0-11

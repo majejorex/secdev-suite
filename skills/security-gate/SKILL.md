@@ -31,7 +31,7 @@ Puts three scanners in front of the main branch. It is the evidence for checklis
    - gitleaks sends nothing.
 
    Write the file only after the user says yes.
-3. **Required checks.** The jobs only block if they are required status checks in branch protection (Settings → Branches). That is a ⚠️ the user has to do; say it in one line.
+3. **Required checks.** The jobs only block if they are required status checks in branch protection (Settings → Branches). That step is UNVERIFIED and the user has to do it; say so in one line.
 4. **Updates.** If `.github/dependabot.yml` has no `github-actions` ecosystem, propose adding it: it keeps the pinned SHAs current. The gitleaks and osv-scanner versions and SHA-256, and the Semgrep image digest, are updated by hand from their release pages.
 5. **First run.**
    - A secret found in old history: rotate it first, check its access logs, then purge history or add its fingerprint to `.gitleaksignore` (checklist P1-08). Never ignore a secret that wasn't rotated.

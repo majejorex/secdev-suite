@@ -1,16 +1,25 @@
 // Runs evals/cases.json with `claude -p --plugin-dir <this repo>` in fictitious projects.
-// Usage: node evals/run.mjs <output folder, outside the repo> [model] [id1,id2…]
-// It costs money (about $0.50 per case with Opus): it is not part of `npm test`.
+// Usage: node evals/run.mjs <output folder, outside the repo> [model] [id1,id2…] [--repeat N]
+// Release runs pin the model (claude-sonnet-5-5) and use --repeat 3 (README, "Testing").
+// It costs money (about $0.21 per case and repeat with Sonnet): it is not part of `npm test`.
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { parseArgs, missingMentions, verdictFrom, verdictConsistent, aggregate, summaryMarkdown } from './lib.mjs';
 
 const suite = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const [outArg, model = '', only = ''] = process.argv.slice(2);
+let opts;
+try {
+  opts = parseArgs(process.argv.slice(2));
+} catch (e) {
+  console.error(e.message);
+  process.exit(2);
+}
+const { outArg, model, only, repeat } = opts;
 if (!outArg) {
-  console.error('Usage: node evals/run.mjs <output-folder> [model] [id1,id2]');
+  console.error('Usage: node evals/run.mjs <output-folder> [model] [id1,id2] [--repeat N]');
   process.exit(2);
 }
 const outDir = resolve(outArg);
@@ -53,9 +62,9 @@ function makeFixture(dir, stack) {
   }
 }
 
-function run(c) {
+function run(c, i) {
   return new Promise((resolve) => {
-    const dir = join(outDir, 'fx', c.id);
+    const dir = join(outDir, 'fx', `${c.id}-${i}`);
     makeFixture(dir, c.stack);
     for (const [p, content] of Object.entries(c.files ?? {})) {
       mkdirSync(dirname(join(dir, p)), { recursive: true });
@@ -74,7 +83,7 @@ function run(c) {
     const timer = setTimeout(() => p.kill(), 8 * 60 * 1000);
     p.on('close', () => {
       clearTimeout(timer);
-      writeFileSync(join(outDir, `${c.id}.jsonl`), raw);
+      writeFileSync(join(outDir, `${c.id}-${i}.jsonl`), raw);
       const want = c.skill ?? 'security-checklist'; // the skill this case expects to load
       const skills = [];
       const skillCalls = new Set(); // ids of calls to this skill, to know whether it loaded without error
@@ -83,6 +92,7 @@ function run(c) {
       let refErrors = 0;
       let finalText = '';
       let cost = null;
+      let usedModel = null;
       const suiteNorm = suite.toLowerCase().replace(/\\/g, '/');
       for (const line of raw.split('\n')) {
         let m; try { m = JSON.parse(line); } catch { continue; }
@@ -98,6 +108,7 @@ function run(c) {
           }
           if (b.type === 'tool_result' && b.is_error && pending.has(b.tool_use_id)) refErrors++;
         }
+        if (m.type === 'system' && m.subtype === 'init') usedModel = m.model ?? null;
         if (m.type === 'result') { finalText = m.result ?? ''; cost = m.total_cost_usd; }
       }
       const triggered = skills.some((s) => String(s).includes(want));
@@ -106,24 +117,34 @@ function run(c) {
       // control file that hooks/post-edit.mjs leaves for that session.
       const sid = (raw.match(/"session_id":"([A-Za-z0-9_-]+)"/) ?? [])[1];
       const editReminder = Boolean(sid) && existsSync(join(tmpdir(), 'secdev-sessions', `${sid}.reminded`));
-      // Each item is a word or a list of alternatives; any alternative counts.
-      const text = finalText.toLowerCase();
-      const missing = (c.mustMention ?? []).filter((w) => ![w].flat().some((alt) => text.includes(alt.toLowerCase())));
+      const missing = missingMentions(finalText, c.mustMention);
       const controls = (c.expectControls ?? []).filter((id) => !finalText.includes(id));
-      // Consistency: with any P0 row at ❌ the verdict must be BLOCK (BLOQUEA in Spanish answers).
-      const verdictRaw = (finalText.match(/(?:Verdict|Veredicto):\**\s*\**\s*(BLOCK|PASS WITH ISSUES|PASS|BLOQUEA|PASA CON PENDIENTES|PASA)/i) ?? [])[1]?.toUpperCase() ?? null;
-      const verdict = { BLOQUEA: 'BLOCK', 'PASA CON PENDIENTES': 'PASS WITH ISSUES', PASA: 'PASS' }[verdictRaw] ?? verdictRaw;
-      const p0Fail = /^\|\s*P0-\d\d\s*\|[^\n]*\|\s*❌\s*\|/m.test(finalText);
-      // Only the checklist gives a verdict.
-      const verdictOk = !c.trigger || want !== 'security-checklist' || (verdict !== null && (!p0Fail || verdict === 'BLOCK'));
-      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk && missing.length === 0 && (!c.expectVerdict || verdict === c.expectVerdict)));
-      resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
+      const verdict = verdictFrom(finalText);
+      // Only the checklist gives a verdict, and it must follow from its own table.
+      const verdictOk = !c.trigger || want !== 'security-checklist' || verdictConsistent(finalText, verdict);
+      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk
+        && missing.length === 0 && controls.length === 0 && (!c.expectVerdict || verdict === c.expectVerdict)));
+      resolve({ id: c.id, run: i, model: usedModel, expected: c.trigger, triggered, loaded, verdict, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
     });
   });
 }
 
 mkdirSync(outDir, { recursive: true });
-const results = await Promise.all(cases.map(run));
+// Every case `repeat` times, at most CONCURRENCY `claude -p` processes at once (more hit rate limits).
+const CONCURRENCY = 8;
+const jobs = cases.flatMap((c) => Array.from({ length: repeat }, (_, k) => () => run(c, k + 1)));
+const results = [];
+let next = 0;
+await Promise.all(Array.from({ length: Math.min(CONCURRENCY, jobs.length) }, async () => {
+  while (next < jobs.length) results.push(await jobs[next++]());
+}));
+results.sort((a, b) => a.id.localeCompare(b.id) || a.run - b.run);
 writeFileSync(join(outDir, 'results.json'), JSON.stringify(results, null, 2));
-for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${r.id.padEnd(22)} expected=${r.expected} triggered=${r.triggered} loaded=${r.loaded} verdict=${r.verdict}${r.verdictOk ? '' : '(INCONSISTENT)'} hook=${r.hookSeen} reminder=${r.editReminder} refReads=${r.refReads} refErrors=${r.refErrors} cost=${r.cost} missingControls=${JSON.stringify(r.missingControls)} missingMentions=${JSON.stringify(r.missingMentions)}`);
-process.exit(results.every((r) => r.ok) ? 0 : 1);
+for (const r of results) console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${`${r.id}#${r.run}`.padEnd(25)} expected=${r.expected} triggered=${r.triggered} loaded=${r.loaded} verdict=${r.verdict}${r.verdictOk ? '' : '(INCONSISTENT)'} hook=${r.hookSeen} reminder=${r.editReminder} refReads=${r.refReads} refErrors=${r.refErrors} cost=${r.cost} missingControls=${JSON.stringify(r.missingControls)} missingMentions=${JSON.stringify(r.missingMentions)}`);
+const rows = aggregate(results, cases, repeat);
+const { version } = JSON.parse(readFileSync(join(suite, '.claude-plugin/plugin.json'), 'utf8'));
+const models = [...new Set(results.map((r) => r.model).filter(Boolean))];
+const summary = summaryMarkdown({ date: new Date().toISOString().slice(0, 10), version: `v${version}`, models, repeat, rows });
+writeFileSync(join(outDir, 'summary.md'), summary);
+console.log(`\n${summary}`);
+process.exit(rows.every((r) => r.gateOk) ? 0 : 1);

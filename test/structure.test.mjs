@@ -105,6 +105,20 @@ test('no file in the repo hides Unicode bidi or zero-width characters (Trojan So
   assert.deepEqual(bad, []);
 });
 
+test('skills and READMEs use text statuses, not emoji', () => {
+  // The report is checked by status word (MET, NOT MET, UNVERIFIED). Code points avoid emoji in this source.
+  const EMOJI = new RegExp(`[${String.fromCodePoint(0x2705)}${String.fromCodePoint(0x274c)}${String.fromCodePoint(0x26a0)}]`);
+  const files = ['README.md', 'README.es.md', ...readdirSync(join(ROOT, 'skills'), { recursive: true }).map((p) => `skills/${String(p).replace(/\\/g, '/')}`).filter((p) => p.endsWith('.md'))];
+  for (const f of files) assert.doesNotMatch(read(f), EMOJI, `${f} has a status emoji`);
+});
+
+test('critical eval cases exist and cover the negative cases', () => {
+  const { cases } = JSON.parse(read('evals/cases.json'));
+  for (const c of cases) assert.ok(c.critical === undefined || c.critical === true, `${c.id}: critical must be true or absent`);
+  assert.ok(cases.filter((c) => c.trigger === false).every((c) => c.critical), 'every negative case is critical');
+  assert.ok(cases.some((c) => c.critical && c.expectVerdict === 'BLOCK'), 'a critical case must expect BLOCK');
+});
+
 test('the evals include cases where the skill must NOT activate', () => {
   const { cases } = JSON.parse(read('evals/cases.json'));
   assert.ok(cases.filter((c) => c.trigger === false).length >= 3);
