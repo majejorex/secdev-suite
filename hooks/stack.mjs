@@ -95,6 +95,6 @@ export function render(tags) {
   if (tags.length === 0) return '';
   return [
     `[secdev] Detected stack: ${tags.join(', ')}. Applicable standards: ${standardsFor(tags).join(' + ')}.`,
-    '[secdev] When designing, or before calling done anything that touches auth, roles, user data, payments, uploads, secrets, access rules or app signing and updates, load the secdev:security-checklist skill.',
+    '[secdev] Before calling done anything that touches auth, roles, user data, payments, uploads, secrets or access rules, load secdev:security-checklist.',
   ].join('\n');
 }

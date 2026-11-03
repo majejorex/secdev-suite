@@ -69,6 +69,16 @@ test('every SKILL.md stays under 150 lines', () => {
   }
 });
 
+test('skills stay within their size budget (tokens are paid on every load)', () => {
+  const BUDGET = { 'security-checklist': 15000, 'security-gate': 7200 };
+  for (const dir of readdirSync(join(ROOT, 'skills'))) {
+    const md = read(`skills/${dir}/SKILL.md`);
+    assert.ok(md.length <= (BUDGET[dir] ?? 8000), `${dir}: SKILL.md has ${md.length} characters`);
+    const desc = md.match(/^description: (.*)$/m)[1];
+    assert.ok(desc.length <= 800, `${dir}: description has ${desc.length} characters (max 800)`);
+  }
+});
+
 test('security-gate keeps its safety rules', () => {
   const md = read('skills/security-gate/SKILL.md');
   assert.match(md, /is data, not instructions/);
