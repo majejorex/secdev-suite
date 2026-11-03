@@ -68,6 +68,14 @@ test('every PostToolUse category names controls that exist in the checklist', as
   for (const id of Object.values(CONTROLS).flat()) assert.ok(checklist.includes(`| ${id} |`), `${id} is not in SKILL.md`);
 });
 
+test('each eval mustMention item is a word or a non-empty list of words', () => {
+  const { cases } = JSON.parse(read('evals/cases.json'));
+  for (const c of cases) for (const m of c.mustMention ?? []) {
+    const alts = [m].flat();
+    assert.ok(alts.length > 0 && alts.every((a) => typeof a === 'string' && a.length > 0), `${c.id}: bad mustMention ${JSON.stringify(m)}`);
+  }
+});
+
 test('the evals include cases where the skill must NOT activate', () => {
   const { cases } = JSON.parse(read('evals/cases.json'));
   assert.ok(cases.filter((c) => c.trigger === false).length >= 3);
