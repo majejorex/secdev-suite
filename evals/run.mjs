@@ -102,7 +102,9 @@ function run(c) {
       // control file that hooks/post-edit.mjs leaves for that session.
       const sid = (raw.match(/"session_id":"([A-Za-z0-9_-]+)"/) ?? [])[1];
       const editReminder = Boolean(sid) && existsSync(join(tmpdir(), 'secdev-sessions', `${sid}.reminded`));
-      const missing = (c.mustMention ?? []).filter((w) => !finalText.toLowerCase().includes(w.toLowerCase()));
+      // Each item is a word or a list of alternatives; any alternative counts.
+      const text = finalText.toLowerCase();
+      const missing = (c.mustMention ?? []).filter((w) => ![w].flat().some((alt) => text.includes(alt.toLowerCase())));
       const controls = (c.expectControls ?? []).filter((id) => !finalText.includes(id));
       // Consistency: with any P0 row at ❌ the verdict must be BLOCK (BLOQUEA in Spanish answers).
       const verdictRaw = (finalText.match(/(?:Verdict|Veredicto):\**\s*\**\s*(BLOCK|PASS WITH ISSUES|PASS|BLOQUEA|PASA CON PENDIENTES|PASA)/i) ?? [])[1]?.toUpperCase() ?? null;
@@ -110,7 +112,7 @@ function run(c) {
       const p0Fail = /^\|\s*P0-\d\d\s*\|[^\n]*\|\s*❌\s*\|/m.test(finalText);
       // Only the checklist gives a verdict.
       const verdictOk = !c.trigger || want !== 'security-checklist' || (verdict !== null && (!p0Fail || verdict === 'BLOCK'));
-      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk));
+      const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk && missing.length === 0));
       resolve({ id: c.id, expected: c.trigger, triggered, loaded, verdict, p0Fail, verdictOk, ok, hookSeen, editReminder, skills, refReads: pending.size, refErrors, cost, missingMentions: missing, missingControls: controls });
     });
   });

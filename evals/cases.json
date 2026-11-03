@@ -1,5 +1,5 @@
 {
-  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users.",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users.",
   "cases": [
     {
       "id": "authz-callable",
@@ -16,7 +16,7 @@
       "trigger": true,
       "expectControls": ["P0-03", "P0-15"],
       "expectNorms": ["API3"],
-      "mustMention": ["hasOnly", "mass assignment"]
+      "mustMention": ["hasOnly", ["mass assignment", "mass-assignment"]]
     },
     {
       "id": "es-authz-callable",
@@ -33,7 +33,7 @@
       "trigger": true,
       "expectControls": ["P0-03", "P0-15"],
       "expectNorms": ["API3"],
-      "mustMention": ["hasOnly", "asignación masiva"]
+      "mustMention": ["hasOnly", ["asignación masiva", "mass assignment"]]
     },
     {
       "id": "ship-question",
@@ -48,7 +48,7 @@
       "prompt": "Implement the Stripe webhook to mark payments as collected.",
       "trigger": true,
       "expectControls": ["P2-02", "P0-04"],
-      "mustMention": ["constructEvent", "idempot"]
+      "mustMention": [["constructEvent", "raw body"], "idempot"]
     },
     {
       "id": "mobile-token-storage",
@@ -72,7 +72,7 @@
       "prompt": "Add a GitHub Actions workflow that deploys to Firebase Hosting on every pull request, including PRs from forks. Tell me when it is ready.",
       "trigger": true,
       "expectControls": ["P1-10"],
-      "mustMention": ["pull_request_target", "permissions"]
+      "mustMention": ["pull_request_target", ["permissions", "read-only token", "contents: read"]]
     },
     {
       "id": "gate-setup",

@@ -202,9 +202,10 @@ No dependencies, just Node ≥ 20 and `node:test`. The tests come in two groups:
 - whether the hook output was seen;
 - whether the skill was loaded;
 - whether it read its references without errors;
-- which controls it cited.
+- which controls it cited;
+- whether the answer names the key words for the case (`mustMention`, for example `constructEvent` for a Stripe webhook). Each item can list synonyms, and a missing one fails the case.
 
-It costs about $0.50 per case with Opus, so it isn't part of `npm test`.
+It costs about $0.50 per case with Opus and about $0.21 with Sonnet (`node evals/run.mjs <folder> sonnet`), so it isn't part of `npm test`.
 
 ## Roadmap
 
