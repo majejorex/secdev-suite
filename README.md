@@ -104,7 +104,7 @@ It looks for Firebase, Supabase, mobile (Expo, React Native, Capacitor), desktop
 
 It runs on Edit, Write, MultiEdit and NotebookEdit. If an edit touches something risky, it reminds the agent to load the checklist before calling the task done.
 
-- It decides from the file path (access rules, `.env`, keys and keystores, headers, desktop packaging) or from the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, and app signing and updates.
+- It decides from the file path (access rules, `.env`, keys and keystores, headers, desktop packaging, CI workflows, Dockerfiles and compose files) or from the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, and app signing and updates.
 - Next to each category it names the checklist controls to look at first, for example `file uploads (P0-14)`.
 - It warns at most once per session and never blocks.
 - It only names categories from a fixed list, never text from the repo.
@@ -130,9 +130,9 @@ It reviews a change, a feature or a whole repo.
 
 **P0, blocks a release:** authentication (password hashing, reset links and re-authentication for sensitive changes included), server-side authorization (admin routes included), isolation between users or tenants, secrets (git history included), input validation, sessions, HTTPS with TLS 1.2 or later, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain.
 
-**P1, process:** protected repos, automated scanning, dependencies, deployments, logging and audit trails, alerts, backups with a tested restore, incident response and periodic reviews.
+**P1, process:** protected repos, automated scanning, dependencies, deployments, logging and audit trails, alerts, backups with a tested restore, incident response (what to do, in order, when a secret leaks), periodic reviews and a hardened CI/CD pipeline.
 
-**P2, depending on the feature:** mobile (signed releases and updates included), payments, GDPR (no trackers before consent, encryption at rest), AI and LLMs, third-party integrations, secure design and desktop apps (Electron, Tauri).
+**P2, depending on the feature:** mobile (signed releases and updates included), payments, GDPR (no trackers before consent, encryption at rest), AI and LLMs, third-party integrations, secure design, desktop apps (Electron, Tauri) and containers.
 
 What changed in each version: [docs/features/](docs/features/).
 
