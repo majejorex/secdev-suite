@@ -87,7 +87,7 @@ O copia una carpeta a mano al directorio de skills de tu agente (en Claude Code,
 
 Qué tienes y qué no:
 
-- **Dónde queda:** en `.agents/skills/` del proyecto (Claude Code recibe un enlace simbólico), o en tu carpeta de usuario con `-g`. En la lista sale también `intel-review`: es la herramienta del mantenedor de este repo, ignórala. Compruébalo con `npx skills list`.
+- **Dónde queda:** en `.agents/skills/` del proyecto (Claude Code recibe un enlace simbólico), o en tu carpeta de usuario con `-g`. Sin `--skill`, el instalador ofrece solo las tres skills. Compruébalo con `npx skills list`.
 - **Igual:** el checklist, la skill de arreglos y el gate de CI, con las mismas peticiones en lenguaje normal («¿podemos publicar esto?», «arregla los P0»).
 - **No incluido:** los dos hooks (detección del stack al iniciar y avisos al editar algo sensible) ni la comprobación diaria de versión. Eso solo existe en el plugin de Claude Code. Sin ellos, pide tú la revisión.
 - **Nombres:** las skills se citan como `secdev:security-fix`. Instaladas sueltas, el nombre es el de la carpeta, `security-fix`.
@@ -321,7 +321,7 @@ El `supply-chain-risk-auditor` de Trail of Bits no se instala por ahora. `osv-sc
 
 <br>
 
-- `/intel-review` es una skill del proyecto en `.claude/skills/` y no se distribuye con el plugin. Ejecuta `node intel/fetch.mjs`, que recoge CISA KEV, GitHub Advisories, EPSS, cambios en los estándares de OWASP y noticias de una lista cerrada de fuentes.
+- `/intel-review` es la skill del mantenedor (`maintainer/intel-review/`; cópiala a `.claude/skills/` para usarla) y no se distribuye con el plugin. Ejecuta `node intel/fetch.mjs`, que recoge CISA KEV, GitHub Advisories, EPSS, cambios en los estándares de OWASP y noticias de una lista cerrada de fuentes.
 - El agente ordena lo recogido, escribe `intel/AAAA-MM-DD.md` y propone cambios en la skill. Solo se aplica lo que aprueba el usuario, y entra mediante un PR.
 - Los datos en bruto (`intel/raw/`) no se versionan. Todo lo que viene de fuera se trata como datos, nunca como instrucciones.
 - Pendiente: decidir si se programa semanalmente.

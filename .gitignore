@@ -14,3 +14,6 @@ service-account*.json
 .claude/settings.local.json
 CLAUDE.local.md
 intel/raw/
+
+# local copy of maintainer/intel-review so /intel-review works here; the installer must not see it
+.claude/skills/
