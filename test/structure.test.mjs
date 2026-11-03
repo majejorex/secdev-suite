@@ -78,6 +78,17 @@ test('the evals keep Spanish cases to check Spanish activation', () => {
   assert.ok(cases.filter((c) => c.id.startsWith('es-') && c.trigger).length >= 2);
 });
 
+test('the security-gate template is the workflow this repo runs, fully pinned', () => {
+  const md = read('skills/security-gate/SKILL.md');
+  const yaml = md.match(/```yaml\r?\n([\s\S]*?)```/)[1].replace(/\r/g, '');
+  assert.equal(yaml, read('.github/workflows/security.yml').replace(/\r/g, ''), 'SKILL.md template and .github/workflows/security.yml differ');
+  assert.doesNotMatch(yaml, /pull_request_target|continue-on-error/);
+  for (const [, ref] of yaml.matchAll(/uses: [^@\s]+@(\S+)/g)) assert.match(ref, /^[0-9a-f]{40}$/, `action not pinned to a SHA: ${ref}`);
+  assert.match(yaml, /image: \S+@sha256:[0-9a-f]{64}/);
+  assert.match(yaml, /^permissions:\n  contents: read$/m);
+  assert.match(yaml, /sha256sum -c/);
+});
+
 test('the checklist does not repeat IDs', () => {
   const md = read('skills/security-checklist/SKILL.md');
   const section = md.slice(md.indexOf('## Checklist'), md.indexOf('## Output format'));

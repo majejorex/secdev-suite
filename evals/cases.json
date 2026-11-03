@@ -1,5 +1,5 @@
 {
-  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load secdev:security-checklist. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users.",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users.",
   "cases": [
     {
       "id": "authz-callable",
@@ -73,6 +73,22 @@
       "trigger": true,
       "expectControls": ["P1-10"],
       "mustMention": ["pull_request_target", "permissions"]
+    },
+    {
+      "id": "gate-setup",
+      "skill": "security-gate",
+      "stack": ["firebase"],
+      "prompt": "Add secret scanning and dependency vulnerability checks to our CI so pull requests fail on them.",
+      "trigger": true,
+      "mustMention": ["gitleaks", "osv-scanner", "required"]
+    },
+    {
+      "id": "es-gate-setup",
+      "skill": "security-gate",
+      "stack": ["next"],
+      "prompt": "Añade un gate de seguridad en CI que bloquee las PR con secretos o dependencias vulnerables.",
+      "trigger": true,
+      "mustMention": ["gitleaks", "osv-scanner"]
     },
     {
       "id": "no-trigger-css",
