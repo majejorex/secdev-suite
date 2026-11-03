@@ -41,6 +41,15 @@ test('desktop apps, signing and updates, crypto, re-authentication and archives'
   assert.ok(classify('src/limit.ts', "const ip = req.headers['x-forwarded-for']").includes('headers and CORS'));
 });
 
+test('CI workflows and container files', () => {
+  assert.ok(classify('.github/workflows/deploy.yml', 'on: pull_request_target').includes('CI/CD pipeline'));
+  assert.ok(classify('C:\\repo\\.gitlab-ci.yml', 'stages: [test]').includes('CI/CD pipeline'));
+  for (const f of ['Dockerfile', 'api/Dockerfile.prod', 'web.Dockerfile', 'compose.yaml', 'docker-compose.dev.yml', '.dockerignore']) {
+    assert.ok(classify(f, 'FROM node:22').includes('containers'), f);
+  }
+  assert.deepEqual(classify('docs/dockerfile-notes.txt', 'FROM'), []);
+});
+
 test('a plain version bump in app.json does not warn', () => {
   assert.deepEqual(classify('app.json', '{ "expo": { "version": "1.2.3" } }'), []);
 });

@@ -106,7 +106,7 @@ Busca Firebase, Supabase, móvil (Expo, React Native, Capacitor), escritorio (El
 
 Se ejecuta con Edit, Write, MultiEdit y NotebookEdit. Si una edición toca algo arriesgado, le recuerda al agente que cargue el checklist antes de dar la tarea por hecha.
 
-- Decide por la ruta del archivo (reglas de acceso, `.env`, claves y keystores, cabeceras, empaquetado de escritorio) o por el texto escrito: auth y reautenticación, roles, endpoints, pagos, tokens en el cliente, subidas de archivos y comprimidos, secretos, CORS y cabeceras de proxy, ejecución con datos externos, llamadas a LLMs, criptografía, ventanas e IPC de escritorio, y firma y actualizaciones de la app.
+- Decide por la ruta del archivo (reglas de acceso, `.env`, claves y keystores, cabeceras, empaquetado de escritorio, workflows de CI, Dockerfiles y archivos compose) o por el texto escrito: auth y reautenticación, roles, endpoints, pagos, tokens en el cliente, subidas de archivos y comprimidos, secretos, CORS y cabeceras de proxy, ejecución con datos externos, llamadas a LLMs, criptografía, ventanas e IPC de escritorio, y firma y actualizaciones de la app.
 - Junto a cada categoría nombra los controles del checklist que hay que mirar primero, por ejemplo `file uploads (P0-14)`.
 - Avisa como mucho una vez por sesión y nunca bloquea.
 - Solo nombra categorías de una lista fija, nunca texto del repo.
@@ -132,9 +132,9 @@ Revisa un cambio, una funcionalidad o un repo entero.
 
 **P0, bloquea un release:** autenticación (incluidos el hash de contraseñas, los enlaces de recuperación y la reautenticación para cambios sensibles), autorización en el servidor (incluidas las rutas de admin), aislamiento entre usuarios o tenants, secretos (incluido el historial de git), validación de entradas, sesiones, HTTPS con TLS 1.2 o superior, protección contra abuso, exposición de la base de datos, mínimo privilegio, entornos separados, configuración segura, CSRF y SSRF, gestión de archivos, tests de autorización y una cadena de suministro mínima.
 
-**P1, proceso:** repos protegidos, análisis automático, dependencias, despliegues, logs y trazas de auditoría, alertas, backups con restauración probada, respuesta a incidentes y revisiones periódicas.
+**P1, proceso:** repos protegidos, análisis automático, dependencias, despliegues, logs y trazas de auditoría, alertas, backups con restauración probada, respuesta a incidentes (qué hacer, y en qué orden, si se filtra un secreto), revisiones periódicas y un pipeline de CI/CD reforzado.
 
-**P2, según la funcionalidad:** móvil (incluidas la firma de releases y de actualizaciones), pagos, RGPD (sin rastreadores antes del consentimiento, cifrado en reposo), IA y LLMs, integraciones con terceros, diseño seguro y apps de escritorio (Electron, Tauri).
+**P2, según la funcionalidad:** móvil (incluidas la firma de releases y de actualizaciones), pagos, RGPD (sin rastreadores antes del consentimiento, cifrado en reposo), IA y LLMs, integraciones con terceros, diseño seguro, apps de escritorio (Electron, Tauri) y contenedores.
 
 Qué cambió en cada versión: [docs/features/](docs/features/) (en inglés).
 

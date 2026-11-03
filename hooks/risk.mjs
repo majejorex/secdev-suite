@@ -10,6 +10,8 @@ const PATH_RULES = [
   ['secrets', /(^|\/)\.env(\.[^/]*)?$|(^|\/)[^/]*(service-?account|credentials)[^/]*\.json$|\.(pem|key|p12|pfx|jks|keystore)$/i],
   ['headers and CORS', /(^|\/)(firebase\.json|vercel\.json|netlify\.toml|_headers)$/i],
   ['app signing and platform config', /(^|\/)(tauri\.conf\.json|electron-builder\.(ya?ml|json)|forge\.config\.[cm]?[jt]s)$/i],
+  ['CI/CD pipeline', /(^|\/)\.github\/workflows\/[^/]+\.ya?ml$|(^|\/)(\.gitlab-ci|azure-pipelines|bitbucket-pipelines|cloudbuild)\.ya?ml$/i],
+  ['containers', /(^|\/)([^/]*\.)?Dockerfile(\.[^/]*)?$|(^|\/)(docker-)?compose[^/]*\.ya?ml$|(^|\/)\.dockerignore$/i],
 ];
 
 const CONTENT_RULES = [
@@ -44,6 +46,8 @@ export const CONTROLS = {
   'cryptography': ['P0-01', 'P2-03'],
   'desktop windows and IPC': ['P2-07'],
   'app signing and platform config': ['P0-07', 'P2-01', 'P2-07'],
+  'CI/CD pipeline': ['P1-10', 'P0-04'],
+  'containers': ['P2-08', 'P0-04'],
 };
 
 const MAX_TEXT = 200_000; // do not analyze huge edits in full
