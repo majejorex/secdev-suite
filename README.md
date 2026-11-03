@@ -86,7 +86,7 @@ Or copy a folder by hand into your agent's skills directory (for Claude Code, `~
 
 What you get and what you don't:
 
-- **Where it lands:** `.agents/skills/` in the project (Claude Code gets a symlink), or your home directory with `-g`. The list also shows `intel-review`: it is the maintainer's tool for this repo, skip it. Check with `npx skills list`.
+- **Where it lands:** `.agents/skills/` in the project (Claude Code gets a symlink), or your home directory with `-g`. Without `--skill`, the installer offers the three skills and nothing else. Check with `npx skills list`.
 - **Same:** the checklist, the fix skill and the CI gate, triggered by the same plain-words requests ("Can we ship this?", "fix the P0s").
 - **Not included:** the two hooks (stack detection at session start, reminders on sensitive edits) and the daily version check. Those only exist in the Claude Code plugin. Without them, ask for the review yourself.
 - **Names:** the skills point to each other as `secdev:security-fix`. Installed standalone, the name is the folder name, `security-fix`.
@@ -320,7 +320,7 @@ Trail of Bits' `supply-chain-risk-auditor` isn't installed for now. `osv-scanner
 
 <br>
 
-- `/intel-review` is a project skill in `.claude/skills/` and isn't shipped with the plugin. It runs `node intel/fetch.mjs`, which collects CISA KEV, GitHub Advisories, EPSS, changes to the OWASP standards and news from a closed list of sources.
+- `/intel-review` is the maintainer's skill (`maintainer/intel-review/`; copy it to `.claude/skills/` to use it) and isn't shipped with the plugin. It runs `node intel/fetch.mjs`, which collects CISA KEV, GitHub Advisories, EPSS, changes to the OWASP standards and news from a closed list of sources.
 - The agent sorts what was collected, writes `intel/YYYY-MM-DD.md` and proposes changes to the skill. Only what the user approves is applied, and it goes in through a PR.
 - Raw data (`intel/raw/`) isn't versioned. Anything that comes from outside is treated as data, never as an instruction.
 - Still open: whether to schedule it weekly.
