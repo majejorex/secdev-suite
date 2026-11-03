@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync } from 'node:fs';
+import { rmSync, mkdirSync, writeFileSync, utimesSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -76,6 +76,32 @@ test('the session id is sanitized for use as a file name', () => {
   assert.equal(safeSessionId('../../etc/passwd'), 'etcpasswd');
   assert.equal(safeSessionId(''), null);
   assert.equal(safeSessionId('abc-123_X'), 'abc-123_X');
+});
+
+test('as a process: marks older than 7 days are deleted, recent ones and other files stay', () => {
+  const dir = join(tmpdir(), 'secdev-sessions');
+  mkdirSync(dir, { recursive: true });
+  const old = `old-${process.pid}-${Date.now()}`;
+  const recent = `recent-${process.pid}-${Date.now()}`;
+  const other = join(dir, `keep-${process.pid}.txt`);
+  const stamp = (name, daysAgo) => {
+    writeFileSync(join(dir, name), '');
+    const t = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+    utimesSync(join(dir, name), t, t);
+  };
+  stamp(`${old}.reminded`, 8);
+  stamp(`${recent}.reminded`, 1);
+  stamp(`keep-${process.pid}.txt`, 30);
+  const sid = `cleanup-${process.pid}-${Date.now()}`;
+  sessions.push(sid, recent);
+  const r = run({ session_id: sid, tool_input: { file_path: 'firestore.rules', new_string: 'allow read: if true;' } });
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /secdev:security-checklist/, 'the reminder is still shown');
+  assert.equal(existsSync(join(dir, `${old}.reminded`)), false, 'old mark deleted');
+  assert.equal(existsSync(join(dir, `${recent}.reminded`)), true, 'recent mark kept');
+  assert.equal(existsSync(other), true, 'only .reminded files are touched');
+  rmSync(other, { force: true });
+  assert.ok(r.ms < 1000, `took ${r.ms} ms`);
 });
 
 test('as a process: warns once per session with the PostToolUse format', () => {
