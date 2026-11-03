@@ -77,7 +77,7 @@ test('skills stay within their size budget (tokens are paid on every load)', () 
   for (const dir of readdirSync(join(ROOT, 'skills'))) {
     const md = read(`skills/${dir}/SKILL.md`);
     assert.ok(md.length <= (BUDGET[dir] ?? 8000), `${dir}: SKILL.md has ${md.length} characters`);
-    const desc = md.match(/^description: (.*)$/m)[1];
+    const desc = md.match(/^description: (?:>-?\s+)?(.*)$/m)[1]; // also the folded `>-` form
     assert.ok(desc.length <= 800, `${dir}: description has ${desc.length} characters (max 800)`);
   }
 });

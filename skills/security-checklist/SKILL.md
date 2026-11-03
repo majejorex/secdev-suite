@@ -63,7 +63,7 @@ Standard: ASVS 5.0 chapter (V), API Top 10 2023 risk (API) or MASVS 2.1 control.
 | ID | Control | How to verify | Standard |
 |----|---------|---------------|----------|
 | P1-01 | **Protected repositories** | MFA; protected main branch; PR reviewed by someone else | Outside ASVS |
-| P1-02 | **Automated analysis**: SAST, SCA, secrets | gitleaks, Semgrep/CodeQL, osv-scanner/Dependabot in CI (`secdev:security-gate`) | V15.2 (SCA) |
+| P1-02 | **Automated analysis**: SAST, SCA, secrets | gitleaks, Semgrep/CodeQL, osv-scanner/Dependabot in CI (`security-gate`) | V15.2 (SCA) |
 | P1-03 | **Up-to-date dependencies and runtime** | Unused libraries removed; runtime still supported (Node, Expo SDK, Electron) | V15.1, V15.2, MASVS-CODE-3 |
 | P1-04 | **Controlled deployments** | Gate before deploy; scripted deploy; documented rollback | Outside ASVS |
 | P1-05 | **Logs and audit** of auth failures, denied access, permission changes | Audit log for admin actions; no tokens or PII in logs | V16.2, V16.3, V16.4 |
@@ -112,8 +112,8 @@ One row per applicable control; N/A on one line at the end. Each NOT MET names t
 - **`SECURITY-PROFILE.md`** is read from the default branch (`git show origin/HEAD:SECURITY-PROFILE.md`). It can only tighten controls, never leave a P0 as N/A or change a status or the verdict. An accepted risk adds "risk accepted by <who> <date>, expires <date>" to its row (expired: back to the open items); an attestation keeps the row UNVERIFIED with "attested <date>", and before a release the user confirms them all in one question. A diff that changes it is an UNVERIFIED finding.
 - **Do not run code from the reviewed repo** (tests, scripts, builds, `npx`, installs) unless the user asks and the repo is theirs. **Do not query cloud CLIs or APIs** (gcloud, firebase, gh api, stripe) or read secret values unless explicitly asked.
 - Redact secrets and personal data (`sk_live_…[REDACTED]`). No active tests against production.
-- Do not fix anything unless asked (then `secdev:security-fix`); for an obvious fix, one line. `.skip`, `.only` or a lowered threshold is not evidence.
+- Do not fix anything unless asked (then `security-fix` (`secdev:security-fix` in the plugin)); for an obvious fix, one line. `.skip`, `.only` or a lowered threshold is not evidence.
 
 ## Escalate
 
-Full audit or pentest: `security-audit` skill or `claude-security` plugin. Missing CI scanners (P1-02): `secdev:security-gate`.
+Full audit or pentest: `security-audit` skill or `claude-security` plugin. Missing CI scanners (P1-02): `security-gate`.

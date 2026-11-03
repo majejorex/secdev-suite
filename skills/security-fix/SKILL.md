@@ -1,7 +1,7 @@
 ---
 name: security-fix
 description: >-
-  Fixes security findings and checks each fix. Use it only when the user asks to fix, correct or remediate a security problem: the findings or blocking rows of a secdev review ("fix P0-02", "fix 2 and 5", "fix the P0s", «arregla los P0»), or a named vulnerability such as a leaked secret, a missing owner check or open access rules ("fix the secret in pay.ts", «corrige la fuga de la clave»). Not for ordinary bugs or features, not for reviewing security (that is secdev:security-checklist) and not for scanner setup (secdev:security-gate).
+  Fixes security findings and checks each fix. Use it only when the user asks to fix, correct or remediate a security problem: the findings or blocking rows of a secdev review ("fix P0-02", "fix 2 and 5", "fix the P0s", «arregla los P0»), or a named vulnerability such as a leaked secret, a missing owner check or open access rules ("fix the secret in pay.ts", «corrige la fuga de la clave»). Not for ordinary bugs or features, not for reviewing security (that is security-checklist) and not for scanner setup (security-gate).
 ---
 
 # Security fix
@@ -10,7 +10,7 @@ Takes the NOT MET rows of a checklist report, fixes them with the smallest chang
 
 ## Procedure
 
-1. **Input.** The checklist report in the conversation. If there is none, or the code changed since, load `secdev:security-checklist` and run it on the same scope first; your own quick review does not replace it.
+1. **Input.** The checklist report in the conversation. If there is none, or the code changed since, load `security-checklist` (`secdev:security-checklist` in the plugin) and run it on the same scope first; your own quick review does not replace it.
 2. **Select.**
    - The rows the user named, or else every NOT MET row, P0 first.
    - UNVERIFIED rows are not fixed: a person resolves them. List them at the end.

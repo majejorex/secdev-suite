@@ -5,7 +5,10 @@
 // Files that are not code or relevant configuration: no warning.
 const SKIP_PATH = /(\.(md|mdx|txt|css|scss|sass|less|svg|png|jpe?g|gif|webp|ico|lock|snap)$|(^|\/)package-lock\.json$|(^|\/)node_modules\/)/i;
 
+const PROFILE = /(^|\/)SECURITY-PROFILE\.md$/; // a .md file that still matters
+
 const PATH_RULES = [
+  ['security profile', PROFILE],
   ['access rules', /(^|\/)(firestore|storage|database)\.rules(\.json)?$|(^|\/)supabase\/migrations\/[^/]+\.sql$/i],
   ['secrets', /(^|\/)\.env(\.[^/]*)?$|(^|\/)[^/]*(service-?account|credentials)[^/]*\.json$|\.(pem|key|p12|pfx|jks|keystore)$/i],
   ['headers and CORS', /(^|\/)(firebase\.json|vercel\.json|netlify\.toml|_headers)$/i],
@@ -32,6 +35,7 @@ const CONTENT_RULES = [
 
 // Checklist controls to look at first, per category. structure.test.mjs checks that each ID exists in SKILL.md.
 export const CONTROLS = {
+  'security profile': ['P0-10', 'P0-11', 'P1-07'],
   'access rules': ['P0-03', 'P0-09', 'P0-15'],
   'secrets': ['P0-04'],
   'headers and CORS': ['P0-08', 'P0-12', 'P0-13'],
@@ -61,7 +65,7 @@ export function editedText(toolInput = {}) {
 
 export function classify(filePath, text) {
   const path = String(filePath ?? '').replace(/\\/g, '/');
-  if (!path || SKIP_PATH.test(path)) return [];
+  if (!path || (SKIP_PATH.test(path) && !PROFILE.test(path))) return [];
   const cats = new Set();
   for (const [cat, re] of PATH_RULES) if (re.test(path)) cats.add(cat);
   for (const [cat, re] of CONTENT_RULES) if (re.test(text ?? '')) cats.add(cat);

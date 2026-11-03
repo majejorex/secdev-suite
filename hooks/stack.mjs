@@ -100,6 +100,7 @@ function detectIn(dir) {
   return tags;
 }
 
+// shortcut: only the first MAX_CHILD_DIRS subfolders in disk order are scanned, so a workspace with more may miss a stack; raise the limit if that is reported.
 // Up to MAX_CHILD_DIRS visible subfolders, without listing the whole folder (Downloads, caches...).
 function childDirs(root) {
   const out = [];
