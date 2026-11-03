@@ -10,7 +10,7 @@
     {
       "name": "secdev",
       "source": "./",
-      "description": "P0/P1/P2 security checklist with evidence (OWASP ASVS 5.0, API Top 10 2023, MASVS 2.1) and stack detection.",
+      "description": "P0/P1/P2 security checklist with evidence (OWASP ASVS 5.0, API Top 10 2023, MASVS 2.1), a CI security gate and stack detection.",
       "keywords": ["security", "owasp", "checklist"]
     }
   ]

@@ -140,6 +140,22 @@ The full list, with how to verify each control and its standard, is in [skills/s
 
 </details>
 
+### 4 · `secdev:security-gate` skill: blocks PRs in CI
+
+It writes `.github/workflows/security.yml` with three blocking jobs. Ask for it in plain words: "add a security gate to CI" or "scan the repo for secrets now".
+
+| Job | Tool | Fails when |
+|---|---|---|
+| `secrets` | gitleaks, full git history | any commit contains a secret |
+| `dependencies` | osv-scanner, every lockfile | a dependency has a known vulnerability not accepted in `osv-scanner.toml` |
+| `sast` | Semgrep CE, `p/default`, metrics off | there is any finding |
+
+- **Pinned and minimal:** the only action is `actions/checkout`, pinned to a SHA. gitleaks and osv-scanner are release binaries checked against their SHA-256, Semgrep is an image pinned by digest, and every job has `contents: read`. It works under the strictest repo policy: "allow only GitHub-owned actions" plus "require SHA pinning".
+- **It shows before writing:** it says what leaves the repo (package names to osv.dev, rule downloads from Semgrep) and writes the file only after your OK.
+- **One step left for you:** make the three jobs required status checks in branch protection. Until then they only warn.
+- **Run now:** it can also run the three tools locally once, with your permission. It ranks CVEs by CISA KEV first, then EPSS.
+- **Dogfooded:** this repo runs the same workflow, and a test keeps it identical to the template in the skill. On its first run it found two hidden Unicode bidi characters in our own tests.
+
 ### What it doesn't do
 
 It doesn't replace an audit. For that it points to:
@@ -198,17 +214,17 @@ It costs about $0.50 per case with Opus, so it isn't part of `npm test`.
 | F1 | `PostToolUse` warning hook, using the `security-guidance` format (`hookSpecificOutput.additionalContext`). Without it, the skill activated in about 3 of 4 positive eval cases | ✅ v0.2.0 |
 | F1 | `authz-tests` skill: the matrix and tests for BOLA and BFLA | Planned |
 | F1 | `secure-design` skill and a per-project `SECURITY-PROFILE.md` | Planned |
-| F2 | `security-gate` skill: gitleaks, `osv-scanner` and Semgrep in every repo's gate | Next |
+| F2 | `security-gate` skill: gitleaks, `osv-scanner` and Semgrep in every repo's gate | ✅ v0.4.0 |
 | F3 | Threat intelligence, manual version (`/intel-review`) | ✅ Done |
 | F4 | Automated evals: activation rate and false positives | Planned |
 
 **Order decided on 2026-11-02:**
 
-1. F2 first. What the repos using this actually lack is a scanner for secrets and dependencies.
-2. Then `authz-tests`.
+1. ~~F2 first~~: done in v0.4.0.
+2. Next, `authz-tests`.
 3. After that, `secure-design` and `SECURITY-PROFILE.md`.
 
-Trail of Bits' `supply-chain-risk-auditor` isn't installed for now. `osv-scanner` covers CVEs, and the rest (abandoned packages, publishers, install scripts) will be reviewed once F2 is running.
+Trail of Bits' `supply-chain-risk-auditor` isn't installed for now. `osv-scanner` covers CVEs, and the rest (abandoned packages, publishers, install scripts) will be reviewed now that F2 is running.
 
 <details>
 <summary><strong>F3: how <code>/intel-review</code> works</strong></summary>

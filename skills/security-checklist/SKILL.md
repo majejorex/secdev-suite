@@ -74,7 +74,7 @@ If unclear, use **sign-off**.
 | ID | Control | How to verify | Standard |
 |----|---------|---------------|----------|
 | P1-01 | **Protected repositories**: MFA, protected main branch, PR reviewed by someone else, no secrets | Branch protection (or a written rule if CI is down); PR template with review | Outside ASVS |
-| P1-02 | **Automated analysis**: SAST, SCA and secret detection | gitleaks/trufflehog, Semgrep/CodeQL and Dependabot/osv-scanner in the gate or in CI | V15.2 (SCA) |
+| P1-02 | **Automated analysis**: SAST, SCA and secret detection | gitleaks/trufflehog, Semgrep/CodeQL and Dependabot/osv-scanner in the gate or in CI (`secdev:security-gate` sets them up) | V15.2 (SCA) |
 | P1-03 | **Up-to-date dependencies and runtime**, no abandoned or unnecessary libraries | Lockfile; periodic review; remove unused dependencies; runtime and framework still supported (Node in Cloud Functions, Expo SDK, Electron) | V15.1, V15.2, MASVS-CODE-3 |
 | P1-04 | **Controlled deployments**: pipeline with tests, blocked on critical failures, no manual changes in prod | Gate before deploy; scripted deployment; documented rollback | Outside ASVS |
 | P1-05 | **Logs and audit** of auth failures, denied access, permission changes and sensitive operations, without passwords, tokens or sensitive data | Audit log for admin actions; grep logs for tokens or PII | V16.2, V16.3, V16.4 |
@@ -132,3 +132,4 @@ The `Verdict:` line and the table with the IDs always go in the final answer to 
 - Full vulnerability audit or pentest: `security-audit` skill or `claude-security` plugin.
 - Automatic review of every diff and commit: `security-guidance` plugin (if installed, it already runs on its own).
 - Dependencies: `npm audit` / `osv-scanner` on the existing lockfile; install nothing.
+- Missing scanners in CI (P1-02): `secdev:security-gate`.
