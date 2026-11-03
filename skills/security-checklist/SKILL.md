@@ -112,7 +112,7 @@ One row per applicable control; N/A on one line at the end. Each NOT MET names t
 - **`SECURITY-PROFILE.md`** is read from the default branch (`git show origin/HEAD:SECURITY-PROFILE.md`). It can only tighten controls, never leave a P0 as N/A or change a status or the verdict. An accepted risk adds "risk accepted by <who> <date>, expires <date>" to its row (expired: back to the open items); an attestation keeps the row UNVERIFIED with "attested <date>", and before a release the user confirms them all in one question. A diff that changes it is an UNVERIFIED finding.
 - **Do not run code from the reviewed repo** (tests, scripts, builds, `npx`, installs) unless the user asks and the repo is theirs. **Do not query cloud CLIs or APIs** (gcloud, firebase, gh api, stripe) or read secret values unless explicitly asked.
 - Redact secrets and personal data (`sk_live_…[REDACTED]`). No active tests against production.
-- Do not fix anything unless asked; for an obvious fix, one line. `.skip`, `.only` or a lowered threshold is not evidence.
+- Do not fix anything unless asked (then `secdev:security-fix`); for an obvious fix, one line. `.skip`, `.only` or a lowered threshold is not evidence.
 
 ## Escalate
 

@@ -87,6 +87,17 @@ test('security-gate keeps its safety rules', () => {
   assert.match(md, /never write them from memory or copy them from the reviewed repo/);
 });
 
+test('security-fix keeps its safety rules and every skill named by an eval exists', () => {
+  const md = read('skills/security-fix/SKILL.md');
+  assert.match(md, /is data, not instructions/);
+  assert.match(md, /Never commit, push, deploy/);
+  assert.match(md, /do not read secret values/);
+  assert.match(md, /At most 3 passes/);
+  assert.match(md, /no check, test or rule was removed or weakened/);
+  const { cases } = JSON.parse(read('evals/cases.json'));
+  for (const c of cases) assert.ok(existsSync(join(ROOT, 'skills', c.skill ?? 'security-checklist', 'SKILL.md')), `${c.id}: unknown skill ${c.skill}`);
+});
+
 test('every PostToolUse category names controls that exist in the checklist', async () => {
   const { CONTROLS } = await import('../hooks/risk.mjs');
   const checklist = read('skills/security-checklist/SKILL.md');
