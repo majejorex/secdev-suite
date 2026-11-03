@@ -1,5 +1,5 @@
 {
-  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds).",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds). 'readme-*' cases use the exact phrases of the README usage guide on a tiny project; they must load the checklist, not the gate.",
   "cases": [
     {
       "id": "authz-callable",
@@ -264,6 +264,74 @@
         ]
       ],
       "critical": true
+    },
+    {
+      "id": "readme-ship-en",
+      "prompt": "Can we ship this?",
+      "stack": [],
+      "files": {
+        "firebase.json": "{}\n",
+        "firestore.rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{doc=**} {\n      allow read, write: if true;\n    }\n  }\n}\n",
+        "functions/package.json": "{\"dependencies\":{\"firebase-functions\":\"^6.0.0\",\"firebase-admin\":\"^13.0.0\"}}\n",
+        "functions/src/index.ts": "import { onCall } from 'firebase-functions/v2/https';\nimport { getFirestore } from 'firebase-admin/firestore';\nexport const getOrder = onCall(async (req) => {\n  const snap = await getFirestore().doc('orders/' + req.data.orderId).get();\n  return snap.data();\n});\n"
+      },
+      "trigger": true,
+      "critical": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-09"
+      ]
+    },
+    {
+      "id": "es-readme-ship",
+      "prompt": "¿Podemos publicar esto?",
+      "stack": [],
+      "files": {
+        "firebase.json": "{}\n",
+        "firestore.rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{doc=**} {\n      allow read, write: if true;\n    }\n  }\n}\n",
+        "functions/package.json": "{\"dependencies\":{\"firebase-functions\":\"^6.0.0\",\"firebase-admin\":\"^13.0.0\"}}\n",
+        "functions/src/index.ts": "import { onCall } from 'firebase-functions/v2/https';\nimport { getFirestore } from 'firebase-admin/firestore';\nexport const getOrder = onCall(async (req) => {\n  const snap = await getFirestore().doc('orders/' + req.data.orderId).get();\n  return snap.data();\n});\n"
+      },
+      "trigger": true,
+      "critical": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-09"
+      ]
+    },
+    {
+      "id": "readme-review-change",
+      "prompt": "Review the security of this change.",
+      "stack": [],
+      "files": {
+        "firebase.json": "{}\n",
+        "firestore.rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{doc=**} {\n      allow read, write: if true;\n    }\n  }\n}\n",
+        "functions/package.json": "{\"dependencies\":{\"firebase-functions\":\"^6.0.0\",\"firebase-admin\":\"^13.0.0\"}}\n",
+        "functions/src/index.ts": "import { onCall } from 'firebase-functions/v2/https';\nimport { getFirestore } from 'firebase-admin/firestore';\nexport const getOrder = onCall(async (req) => {\n  const snap = await getFirestore().doc('orders/' + req.data.orderId).get();\n  return snap.data();\n});\n"
+      },
+      "trigger": true,
+      "critical": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-09"
+      ]
+    },
+    {
+      "id": "es-readme-review-repo",
+      "prompt": "Revisa la seguridad de todo el repo antes del release.",
+      "stack": [],
+      "files": {
+        "firebase.json": "{}\n",
+        "firestore.rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{db}/documents {\n    match /{doc=**} {\n      allow read, write: if true;\n    }\n  }\n}\n",
+        "functions/package.json": "{\"dependencies\":{\"firebase-functions\":\"^6.0.0\",\"firebase-admin\":\"^13.0.0\"}}\n",
+        "functions/src/index.ts": "import { onCall } from 'firebase-functions/v2/https';\nimport { getFirestore } from 'firebase-admin/firestore';\nexport const getOrder = onCall(async (req) => {\n  const snap = await getFirestore().doc('orders/' + req.data.orderId).get();\n  return snap.data();\n});\n"
+      },
+      "trigger": true,
+      "critical": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-09"
+      ]
     },
     {
       "id": "no-trigger-css",
