@@ -1,6 +1,6 @@
 # secdev security gate: blocks a PR that adds a secret, a vulnerable dependency or a Semgrep finding.
-# Versions checked on 2026-11-03. Dependabot (github-actions) updates the action SHAs; the gitleaks
-# version + SHA-256 and the Semgrep image digest are updated by hand from their release pages.
+# Versions checked on 2026-11-03. Dependabot (github-actions) updates the checkout SHA; the gitleaks and
+# osv-scanner versions + SHA-256 and the Semgrep image digest are updated by hand from their release pages.
 name: security
 
 on:
@@ -31,15 +31,21 @@ jobs:
           ./gitleaks git --redact -v .
 
   dependencies:
-    if: github.event_name == 'pull_request'
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
-    with:
-      # Results stay in the job log. SARIF upload needs Code Scanning and fails on fork PRs.
-      upload-sarif: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: osv-scanner (lockfiles)
+        env:
+          OSV_SCANNER_VERSION: 2.7.0
+          OSV_SCANNER_SHA256: 160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b
+        run: |
+          curl -sSfL -o osv-scanner "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64"
+          echo "${OSV_SCANNER_SHA256}  osv-scanner" | sha256sum -c -
+          chmod +x osv-scanner
+          ./osv-scanner scan -r .
 
   sast:
     if: github.actor != 'dependabot[bot]'

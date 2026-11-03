@@ -10,7 +10,7 @@ Puts three scanners in front of the main branch. It is the evidence for checklis
 | Job | Tool | Blocks a PR when |
 |-----|------|------------------|
 | `secrets` | gitleaks, full git history | any commit contains a secret |
-| `dependencies` | osv-scanner, PR mode | the PR **adds** a dependency with a known vulnerability (existing ones don't block) |
+| `dependencies` | osv-scanner, every lockfile | a dependency has a known vulnerability, unless it is accepted in `osv-scanner.toml` |
 | `sast` | Semgrep CE, `p/default` | there is any finding |
 
 ## Modes
@@ -32,9 +32,10 @@ Puts three scanners in front of the main branch. It is the evidence for checklis
 
    Write the file only after the user says yes.
 3. **Required checks.** The jobs only block if they are required status checks in branch protection (Settings → Branches). That is a ⚠️ the user has to do; say it in one line.
-4. **Updates.** If `.github/dependabot.yml` has no `github-actions` ecosystem, propose adding it: it keeps the pinned SHAs current. The gitleaks version and SHA-256 and the Semgrep image digest are updated by hand from their release pages.
+4. **Updates.** If `.github/dependabot.yml` has no `github-actions` ecosystem, propose adding it: it keeps the pinned SHAs current. The gitleaks and osv-scanner versions and SHA-256, and the Semgrep image digest, are updated by hand from their release pages.
 5. **First run.**
    - A secret found in old history: rotate it first, check its access logs, then purge history or add its fingerprint to `.gitleaksignore` (checklist P1-08). Never ignore a secret that wasn't rotated.
+   - A known vulnerability that can't be fixed yet: accept it in `osv-scanner.toml` (`[[IgnoredVulns]]` with `id`, `reason` and an `effectiveUntil` date), never without a date.
    - A Semgrep false positive: a `# nosemgrep: <rule-id>` comment on that line, with the reason. Never a blanket exclusion.
 
 ### Template
@@ -43,8 +44,8 @@ Versions checked on 2026-11-03 against each project's release page. Keep every S
 
 ```yaml
 # secdev security gate: blocks a PR that adds a secret, a vulnerable dependency or a Semgrep finding.
-# Versions checked on 2026-11-03. Dependabot (github-actions) updates the action SHAs; the gitleaks
-# version + SHA-256 and the Semgrep image digest are updated by hand from their release pages.
+# Versions checked on 2026-11-03. Dependabot (github-actions) updates the checkout SHA; the gitleaks and
+# osv-scanner versions + SHA-256 and the Semgrep image digest are updated by hand from their release pages.
 name: security
 
 on:
@@ -75,15 +76,21 @@ jobs:
           ./gitleaks git --redact -v .
 
   dependencies:
-    if: github.event_name == 'pull_request'
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
-    with:
-      # Results stay in the job log. SARIF upload needs Code Scanning and fails on fork PRs.
-      upload-sarif: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: osv-scanner (lockfiles)
+        env:
+          OSV_SCANNER_VERSION: 2.7.0
+          OSV_SCANNER_SHA256: 160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b
+        run: |
+          curl -sSfL -o osv-scanner "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64"
+          echo "${OSV_SCANNER_SHA256}  osv-scanner" | sha256sum -c -
+          chmod +x osv-scanner
+          ./osv-scanner scan -r .
 
   sast:
     if: github.actor != 'dependabot[bot]'
@@ -100,10 +107,11 @@ jobs:
 
 Why it is shaped this way (checklist P1-10):
 - It runs on `pull_request`, never `pull_request_target`: code from a fork never gets secrets or a write token.
-- `permissions: contents: read` applies by default; only the osv job asks for more.
+- `permissions: contents: read` for every job.
 - Every action is pinned to a commit SHA and the image to a digest.
+- The only action is `actions/checkout`, which GitHub owns. The gate works under the strictest repo policy ("allow only GitHub-owned actions" plus "require SHA pinning") and adds no third-party action to the supply chain.
 - `persist-credentials: false` keeps the token out of `.git/config`.
-- gitleaks is the release binary checked against its SHA-256. The gitleaks action needs a license for organizations.
+- gitleaks and osv-scanner are release binaries checked against their SHA-256. This also avoids the gitleaks action, which needs a license for organizations.
 
 ## Run now
 
