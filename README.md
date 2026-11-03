@@ -15,6 +15,7 @@
   <a href="https://github.com/majejorex/secdev-suite/tags"><img src="https://img.shields.io/github/v/tag/majejorex/secdev-suite?style=flat-square&color=111111&label=version" alt="Version"></a>
   <a href="https://github.com/majejorex/secdev-suite/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/majejorex/secdev-suite/test.yml?branch=main&style=flat-square&color=111111&label=tests" alt="Tests"></a>
   <img src="https://img.shields.io/badge/plugin-Claude%20Code-111111?style=flat-square" alt="Claude Code plugin">
+  <img src="https://img.shields.io/badge/skills-any%20agent-111111?style=flat-square" alt="Skills for any agent">
   <img src="https://img.shields.io/badge/OWASP-ASVS%205.0%20%C2%B7%20API%202023%20%C2%B7%20MASVS%202.1-111111?style=flat-square" alt="OWASP ASVS 5.0, API Security Top 10 2023, MASVS 2.1">
   <img src="https://img.shields.io/badge/dependencies-0-111111?style=flat-square" alt="Zero dependencies">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license"></a>
@@ -27,7 +28,7 @@
 <p align="center">
   <strong>A P0 / P1 / P2 security checklist your coding agent runs before it says "done".</strong><br>
   Built on OWASP ASVS 5.0, API Security Top 10 2023 and MASVS 2.1, plus two hooks that remind without blocking.<br>
-  <sub>A Claude Code plugin. This repo is both the plugin and its marketplace.</sub>
+  <sub>A Claude Code plugin, and plain skills for any agent (Codex, Cursor and more). This repo is both the plugin and its marketplace.</sub>
 </p>
 
 <p align="center"><strong>English</strong> · <a href="README.es.md">Español</a></p>
@@ -70,6 +71,25 @@ Restart Claude Code to load it. Check it with `claude plugin list`: it shows `se
 Auto-update is off by default for this marketplace, as for any third-party one. Keep it off: when a new version comes out, secdev tells you and you update after reviewing it (see "Updating safely").
 
 To develop without installing: `claude --plugin-dir /path/to/secdev-suite`.
+
+## Install as a skill (other agents)
+
+The three skills in [`skills/`](skills/) are plain `SKILL.md` files, so any agent that reads the open skill format can use them without the plugin. Requires Node.js 22.20+ for the installer ([`skills` CLI](https://github.com/vercel-labs/skills)):
+
+```bash
+npx skills add majejorex/secdev-suite                                   # pick skills and agents
+npx skills add majejorex/secdev-suite --skill security-checklist -a codex   # one skill, one agent
+npx skills add majejorex/secdev-suite -g                                # every project, not just this one
+```
+
+Or copy a folder by hand into your agent's skills directory (for Claude Code, `~/.claude/skills/security-checklist/`). Keep `references/` next to its `SKILL.md`.
+
+What you get and what you don't:
+
+- **Same:** the checklist, the fix skill and the CI gate, triggered by the same plain-words requests ("Can we ship this?", "fix the P0s").
+- **Not included:** the two hooks (stack detection at session start, reminders on sensitive edits) and the daily version check. Those only exist in the Claude Code plugin. Without them, ask for the review yourself.
+- **Names:** the skills point to each other as `secdev:security-fix`. Installed standalone, the name is the folder name, `security-fix`.
+- **Updates:** `npx skills update`. Review the diff first, as in [Updating safely](#updating-safely).
 
 ## Use it in any project
 

@@ -27,7 +27,7 @@
 <p align="center">
   <strong>Un checklist de seguridad P0 / P1 / P2 que tu agente pasa antes de decir «hecho».</strong><br>
   Basado en OWASP ASVS 5.0, API Security Top 10 2023 y MASVS 2.1, con dos hooks que recuerdan sin bloquear.<br>
-  <sub>Un plugin de Claude Code. Este repo es a la vez el plugin y su marketplace.</sub>
+  <sub>Un plugin de Claude Code, y skills normales para cualquier agente (Codex, Cursor y más). Este repo es a la vez el plugin y su marketplace.</sub>
 </p>
 
 <p align="center"><a href="README.md">English</a> · <strong>Español</strong></p>
@@ -72,6 +72,25 @@ Reinicia Claude Code para cargarlo. Compruébalo con `claude plugin list`: apare
 La actualización automática viene desactivada para este marketplace, como para cualquiera de terceros. Mantenla así: cuando salga una versión nueva, secdev te avisa y actualizas después de revisarla (ver «Actualizar con seguridad»).
 
 Para desarrollar sin instalar: `claude --plugin-dir /ruta/a/secdev-suite`.
+
+## Instalar como skill (otros agentes)
+
+Las tres skills de [`skills/`](skills/) son ficheros `SKILL.md` normales, así que cualquier agente que lea el formato abierto de skills puede usarlas sin el plugin. El instalador ([CLI `skills`](https://github.com/vercel-labs/skills)) necesita Node.js 22.20+:
+
+```bash
+npx skills add majejorex/secdev-suite                                   # eliges skills y agentes
+npx skills add majejorex/secdev-suite --skill security-checklist -a codex   # una skill, un agente
+npx skills add majejorex/secdev-suite -g                                # todos los proyectos
+```
+
+O copia una carpeta a mano al directorio de skills de tu agente (en Claude Code, `~/.claude/skills/security-checklist/`). Deja `references/` junto a su `SKILL.md`.
+
+Qué tienes y qué no:
+
+- **Igual:** el checklist, la skill de arreglos y el gate de CI, con las mismas peticiones en lenguaje normal («¿podemos publicar esto?», «arregla los P0»).
+- **No incluido:** los dos hooks (detección del stack al iniciar y avisos al editar algo sensible) ni la comprobación diaria de versión. Eso solo existe en el plugin de Claude Code. Sin ellos, pide tú la revisión.
+- **Nombres:** las skills se citan como `secdev:security-fix`. Instaladas sueltas, el nombre es el de la carpeta, `security-fix`.
+- **Actualizar:** `npx skills update`. Revisa antes el diff, como en [Actualizar con seguridad](#actualizar-con-seguridad).
 
 ## Úsalo en cualquier proyecto
 
