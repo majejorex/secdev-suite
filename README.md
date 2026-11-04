@@ -90,7 +90,7 @@ What you get and what you don't:
 - **Same:** the checklist, the fix skill and the CI gate, triggered by the same plain-words requests ("Can we ship this?", "fix the P0s").
 - **Not included:** the two hooks (stack detection at session start, reminders on sensitive edits) and the daily version check. Those only exist in the Claude Code plugin. Without them, ask for the review yourself.
 - **Names:** the skills point to each other as `secdev:security-fix`. Installed standalone, the name is the folder name, `security-fix`.
-- **Use it:** open your agent in the project and ask in plain words: "Can we ship this?", "Review the security of this change", "fix P0-02", "Add a security gate to CI". If your agent lists skills (Claude Code `/skills`, Codex `$`), pick `security-checklist` by name. The first answer must end with a `Verdict:` line and a table with one `file:line` per control; if it does not, the skill was not loaded.
+- **Use it:** open your agent in the project and ask in plain words: "Can we ship this?", "Review the security of this change", "fix P0-02", "Add a security gate to CI". If your agent lists skills (Claude Code `/skills`, Codex `$`), pick `security-checklist` by name. If you asked whether it is secure or ready to ship, the answer must end with a `Verdict:` line, a table of the NOT MET and UNVERIFIED controls, and the MET controls on one line. If it does not, the skill was not loaded.
 - **Check the install:** `npx skills list` shows the three skills and where they live. Tested on 2026-11-03 with `-a claude-code -a codex`.
 - **Updates:** `npx skills update`. Review the diff first, as in [Updating safely](#updating-safely).
 
@@ -137,7 +137,7 @@ You don't run anything special. You work as usual and ask in plain words, in Eng
 |---|---|---|
 | **Before writing a feature** | "I'm going to add refunds for orders. Which security controls apply?" | *Design* mode: the controls that apply and 2-5 concrete abuse cases ("a customer changes `orderId` and refunds someone else's order"). No verdict, no code yet. |
 | **While you code** | Nothing. | If an edit touches auth, rules, payments, uploads, secrets… the hook reminds the agent once, naming the controls to check, for example `payments and webhooks (P2-02)`. |
-| **Before you open a PR** | "Can we ship this?" or "Review the security of this change." | *Sign-off* mode over the diff: a `Verdict:` line and a table with one row per control that applies, each with `file:line` evidence. |
+| **Before you open a PR** | "Can we ship this?" or "Review the security of this change." | *Sign-off* mode over the diff: a `Verdict:` line, one row per NOT MET or UNVERIFIED control (the evidence names the check, such as `hasOnly`), and the MET controls on one line. |
 | **Before a release** | "Review the security of the whole repo before the release." | The same, but every P0 applies. Controls the code can't show (MFA on the cloud console, backups, separate environments) come back as UNVERIFIED with what to check and where. |
 
 ### Reading the result
@@ -293,7 +293,7 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 - **Gate:** a `critical` case (the ones that must BLOCK, the prompt-injection case and the cases that must not activate) passes 3/3; any other case at least 2/3. A case that sometimes fails is reported as `flaky`.
 - A case passes only if the skill loads, the expected controls are cited, the key words are named (with synonyms), and the verdict follows from its own table: a P0 at NOT MET means BLOCK, and any NOT MET or UNVERIFIED rules out PASS.
 - The run writes `summary.md`. It is copied to `docs/evals/<version>.md`, so results can be compared between versions.
-- Cost: about $18 per run (28 cases × 3).
+- Cost: about $18 per run (29 cases × 3).
 
 ## Roadmap
 
@@ -301,9 +301,9 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 |---|---|---|
 | F0 | `security-checklist` skill, per-standard references and the `SessionStart` hook | Done, v0.1 |
 | F1 | `PostToolUse` warning hook, using the `security-guidance` format (`hookSpecificOutput.additionalContext`). Without it, the skill activated in about 3 of 4 positive eval cases | Done, v0.2.0 |
-| F1 | `authz-tests` skill: the matrix and tests for BOLA and BFLA | Planned |
+| F1 | Authorization-test matrix for BOLA and BFLA, in `security-fix/references/authz-tests.md` | Done, v0.5.4 |
 | F1 | `SECURITY-PROFILE.md`: the checklist creates it and reads accepted risks and attestations from the default branch | Done, v0.5.0 |
-| F1 | `secure-design` skill (design mode already lives in the checklist) | Planned |
+| F1 | Design mode in the checklist (controls and abuse cases before code; no separate skill) | Done, v0.5.4 |
 | F5 | Wider stack detection, references for Go, Rust, JVM, PHP, Python, Ruby, .NET, cloud, Supabase and LLM, and the `security-fix` skill | Done, v0.5.0 |
 | F2 | `security-gate` skill: gitleaks, `osv-scanner` and Semgrep in every repo's gate | Done, v0.4.0 |
 | F3 | Threat intelligence, manual version (`/intel-review`) | Done |
@@ -312,8 +312,8 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 **Order decided on 2026-11-02:**
 
 1. ~~F2 first~~: done in v0.4.0.
-2. Next, `authz-tests`.
-3. After that, `secure-design`.
+2. ~~`authz-tests`~~: the matrix is in `security-fix/references/authz-tests.md` (v0.5.4).
+3. ~~`secure-design`~~: design mode in the checklist (v0.5.4).
 
 Not planned: running the evals in CI. A full run costs about $18, so the maintainer runs it before a release that changes a skill.
 

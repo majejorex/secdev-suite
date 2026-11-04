@@ -1,5 +1,5 @@
 {
-  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds). 'readme-*' cases use the exact phrases of the README usage guide on a tiny project; they must load the checklist, not the gate. 'noVerdict': the case gives no verdict (creating the profile). 'git': the fixture is a git repo with one commit on main. 'expectChanged': files the case must modify. Cases with the 'security-fix' skill expect its report; 'no-trigger-fix-bug' checks that a plain bug fix does not load it.",
+  "about": "Cases to check by hand (or with `claude -p`) that the skill activates when it should and flags the expected controls. 'trigger' = the agent is expected to load the case's 'skill' (default secdev:security-checklist). 'mustMention': each item must appear in the final answer, case-insensitive; an item that is a list passes if any of its alternatives appears. A missing mention fails the case. Cases with an 'es-' id are in Spanish on purpose, to check that activation still works for Spanish-speaking users. 'files': extra fixture files for the case. 'expectVerdict': the verdict the case must get. 'critical': the case must pass every repeat to release (others: two thirds). 'readme-*' cases use the exact phrases of the README usage guide on a tiny project; they must load the checklist, not the gate. 'noVerdict': do not grade the verdict (creating the profile). 'forbidVerdict': the answer must not contain a verdict line (design mode). 'git': the fixture is a git repo with one commit on main. 'expectChanged': files the case must modify. Cases with the 'security-fix' skill expect its report; 'no-trigger-fix-bug' checks that a plain bug fix does not load it.",
   "cases": [
     {
       "id": "authz-callable",
@@ -93,6 +93,26 @@
           "mass-assignment"
         ]
       ]
+    },
+    {
+      "id": "design-callable",
+      "stack": [
+        "firebase"
+      ],
+      "prompt": "Design a callable getChildReport(childId) before any code. Do not write it yet.",
+      "trigger": true,
+      "forbidVerdict": true,
+      "expectControls": [
+        "P0-02",
+        "P0-03"
+      ],
+      "mustMention": [
+        [
+          "childId",
+          "child id"
+        ]
+      ],
+      "critical": true
     },
     {
       "id": "ship-question",

@@ -34,6 +34,14 @@ export function verdictConsistent(text, verdict) {
   return true;
 }
 
+// Sign-off must match the table. noVerdict skips that check (profile). forbidVerdict requires no verdict line (design).
+export function verdictAccepted(text, noVerdict, forbidVerdict = false) {
+  const verdict = verdictFrom(text);
+  if (forbidVerdict) return verdict === null;
+  if (noVerdict) return true;
+  return verdictConsistent(text, verdict);
+}
+
 // Release gate: a critical case must pass every repeat; any other case at least two thirds of them.
 export function aggregate(runs, cases, repeat) {
   return cases.map((c) => {

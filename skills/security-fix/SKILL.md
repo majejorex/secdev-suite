@@ -17,7 +17,7 @@ Takes the NOT MET rows of a checklist report, fixes them with the smallest chang
    - Show a numbered plan (row, files, change) and ask once before editing.
 3. **Fix.** The smallest change that follows the repo's own patterns.
    - Authorization or isolation (P0-02, P0-03): take identity from the verified token, check the owner in the query or rule, allowlist writable fields.
-   - Every P0-02 or P0-03 fix adds its P0-15 test: an "other user" case and a "lower role" case, written to fail without the fix. With no test runner, still write the test file in the repo's usual format (rules emulator, `node:test`) and say how to run it; without the test, P0-15 stays NOT MET.
+   - Every P0-02 or P0-03 fix adds its P0-15 test: an "other user" case and a "lower role" case, written to fail without the fix. File and runner for rules, RLS or an API: [authz-tests.md](references/authz-tests.md). With no test runner, still write that file and say how to run it; without the test, P0-15 stays NOT MET.
    - A secret in the code (P0-04): move it to an environment variable or secret manager. The row stays NOT MET until the user confirms the key was rotated; never read, print or rotate the value.
 4. **Verify.**
    - Re-run the checklist procedure only on the fixed rows, with `file:line` evidence and the refute pass.

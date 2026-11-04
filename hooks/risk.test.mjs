@@ -50,6 +50,16 @@ test('CI workflows and container files', () => {
   assert.deepEqual(classify('docs/dockerfile-notes.txt', 'FROM'), []);
 });
 
+test('Go, FastAPI, C#, axum and SQL policies are risky', () => {
+  assert.ok(classify('internal/http/user.go', 'r.GET("/users/:id", h)').includes('endpoints and callables'));
+  assert.ok(classify('main.go', 'http.HandleFunc("/r", h)').includes('endpoints and callables'));
+  assert.ok(classify('app/main.py', '@app.post("/children/{child_id}")\ndef get_child():').includes('endpoints and callables'));
+  assert.ok(classify('Api/Orders.cs', '[Authorize(Roles = "admin")]').includes('roles and permissions'));
+  assert.ok(classify('Api/Orders.cs', 'app.MapGet("/orders/{id}", Get);').includes('endpoints and callables'));
+  assert.ok(classify('src/api.rs', 'use axum::routing::get;\nRouter::new().route("/users/{id}", get(handler))').includes('endpoints and callables'));
+  assert.ok(classify('db/policies.sql', 'CREATE POLICY "own" ON profiles USING (auth.uid() = user_id);').includes('access rules'));
+});
+
 test('a plain version bump in app.json does not warn', () => {
   assert.deepEqual(classify('app.json', '{ "expo": { "version": "1.2.3" } }'), []);
 });

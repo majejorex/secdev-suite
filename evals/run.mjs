@@ -7,7 +7,7 @@ import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { parseArgs, missingMentions, verdictFrom, verdictConsistent, aggregate, summaryMarkdown } from './lib.mjs';
+import { parseArgs, missingMentions, verdictFrom, verdictAccepted, aggregate, summaryMarkdown } from './lib.mjs';
 
 const suite = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 let opts;
@@ -144,8 +144,8 @@ function run(c, i) {
       const missing = missingMentions(finalText, c.mustMention);
       const controls = (c.expectControls ?? []).filter((id) => !finalText.includes(id));
       const verdict = verdictFrom(finalText);
-      // The checklist and the fix skill give a verdict, and it must follow from its own table.
-      const verdictOk = !c.trigger || c.noVerdict || !['security-checklist', 'security-fix'].includes(want) || verdictConsistent(finalText, verdict);
+      // Checklist and fix: a sign-off verdict must match its table. noVerdict skips that. forbidVerdict forbids the line.
+      const verdictOk = !c.trigger || !['security-checklist', 'security-fix'].includes(want) || verdictAccepted(finalText, Boolean(c.noVerdict), Boolean(c.forbidVerdict));
       const notChanged = (c.expectChanged ?? []).filter((p) => (existsSync(join(dir, p)) ? readFileSync(join(dir, p), 'utf8') : null) === before[p]);
       const ok = triggered === c.trigger && (!c.trigger || (loaded && refErrors === 0 && verdictOk && notChanged.length === 0
         && missing.length === 0 && controls.length === 0 && (!c.expectVerdict || verdict === c.expectVerdict)));
