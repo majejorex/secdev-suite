@@ -91,7 +91,7 @@ Qué tienes y qué no:
 - **Igual:** el checklist, la skill de arreglos y el gate de CI, con las mismas peticiones en lenguaje normal («¿podemos publicar esto?», «arregla los P0»).
 - **No incluido:** los dos hooks (detección del stack al iniciar y avisos al editar algo sensible) ni la comprobación diaria de versión. Eso solo existe en el plugin de Claude Code. Sin ellos, pide tú la revisión.
 - **Nombres:** las skills se citan como `secdev:security-fix`. Instaladas sueltas, el nombre es el de la carpeta, `security-fix`.
-- **Úsalo:** abre tu agente en el proyecto y pide en lenguaje normal: «¿podemos publicar esto?», «revisa la seguridad de este cambio», «arregla P0-02», «añade un gate de seguridad a CI». Si tu agente lista las skills (Claude Code `/skills`, Codex `$`), elige `security-checklist` por su nombre. La primera respuesta debe acabar con una línea `Verdict:` y una tabla con un `file:line` por control; si no es así, la skill no se cargó.
+- **Úsalo:** abre tu agente en el proyecto y pide en lenguaje normal: «¿podemos publicar esto?», «revisa la seguridad de este cambio», «arregla P0-02», «añade un gate de seguridad a CI». Si tu agente lista las skills (Claude Code `/skills`, Codex `$`), elige `security-checklist` por su nombre. Si preguntaste si es seguro o si se puede publicar, la respuesta debe acabar con una línea `Verdict:`, una tabla de los controles NOT MET y UNVERIFIED, y los MET en una línea. Si no es así, la skill no se cargó.
 - **Comprueba la instalación:** `npx skills list` muestra las tres skills y dónde están. Probado el 2026-11-03 con `-a claude-code -a codex`.
 - **Actualizar:** `npx skills update`. Revisa antes el diff, como en [Actualizar con seguridad](#actualizar-con-seguridad).
 
@@ -138,7 +138,7 @@ No hay que ejecutar nada especial. Trabajas como siempre y preguntas con tus pal
 |---|---|---|
 | **Antes de escribir una funcionalidad** | «Voy a añadir devoluciones de pedidos. ¿Qué controles de seguridad aplican?» | Modo *Design*: los controles que aplican y 2-5 casos de abuso concretos («un cliente cambia `orderId` y devuelve el pedido de otro»). Sin veredicto y todavía sin código. |
 | **Mientras programas** | Nada. | Si una edición toca auth, reglas, pagos, subidas, secretos…, el hook se lo recuerda al agente una vez, con los controles que hay que mirar, por ejemplo `payments and webhooks (P2-02)`. |
-| **Antes de abrir una PR** | «¿Podemos publicar esto?» o «Revisa la seguridad de este cambio». | Modo *Sign-off* sobre el diff: una línea `Verdict:` y una tabla con una fila por control que aplica, cada una con evidencia `archivo:línea`. |
+| **Antes de abrir una PR** | «¿Podemos publicar esto?» o «Revisa la seguridad de este cambio». | Modo *Sign-off* sobre el diff: una línea `Verdict:`, una fila por control NOT MET o UNVERIFIED (la evidencia nombra la comprobación, como `hasOnly`) y los MET en una línea. |
 | **Antes de un release** | «Revisa la seguridad de todo el repo antes del release». | Lo mismo, pero aplican todos los P0. Lo que el código no puede demostrar (MFA en la consola cloud, backups, entornos separados) sale como UNVERIFIED, con qué mirar y dónde. |
 
 ### Cómo leer el resultado
@@ -294,7 +294,7 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 - **Umbral:** un caso `critical` (los que deben dar BLOCK, el de prompt injection y los que no deben activarse) pasa 3/3; el resto, al menos 2/3. Un caso que a veces falla sale como `flaky`.
 - Un caso pasa solo si la skill se carga, cita los controles esperados, nombra las palabras clave (con sinónimos) y el veredicto se deduce de su propia tabla: un P0 en NOT MET es BLOCK, y cualquier NOT MET o UNVERIFIED descarta PASS.
 - La ejecución escribe `summary.md`. Se copia a `docs/evals/<versión>.md` para comparar resultados entre versiones.
-- Coste: unos 18 $ por ejecución (28 casos × 3).
+- Coste: unos 18 $ por ejecución (29 casos × 3).
 
 ## Hoja de ruta
 
@@ -302,9 +302,9 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 |---|---|---|
 | F0 | Skill `security-checklist`, referencias por estándar y hook `SessionStart` | Hecho, v0.1 |
 | F1 | Hook de aviso `PostToolUse`, con el formato de `security-guidance` (`hookSpecificOutput.additionalContext`). Sin él, la skill se activaba en unos 3 de cada 4 casos positivos de las evals | Hecho, v0.2.0 |
-| F1 | Skill `authz-tests`: la matriz y los tests de BOLA y BFLA | Planificado |
+| F1 | Matriz de tests de autorización (BOLA y BFLA) en `security-fix/references/authz-tests.md` | Hecho, v0.5.4 |
 | F1 | `SECURITY-PROFILE.md`: el checklist lo crea y lee los riesgos aceptados y las atestaciones de la rama por defecto | Hecho, v0.5.0 |
-| F1 | Skill `secure-design` (el modo diseño ya vive en el checklist) | Planificado |
+| F1 | Modo Design en el checklist (controles y casos de abuso antes del código; sin skill aparte) | Hecho, v0.5.4 |
 | F5 | Detección de más stacks, referencias de Go, Rust, JVM, PHP, Python, Ruby, .NET, nube, Supabase y LLM, y la skill `security-fix` | Hecho, v0.5.0 |
 | F2 | Skill `security-gate`: gitleaks, `osv-scanner` y Semgrep en el gate de cada repo | Hecho, v0.4.0 |
 | F3 | Inteligencia de amenazas, versión manual (`/intel-review`) | Hecho |
@@ -313,8 +313,8 @@ node evals/run.mjs <carpeta-fuera-del-repo> claude-sonnet-5-5 --repeat 3
 **Orden decidido el 2026-11-02:**
 
 1. ~~Primero F2~~: hecho en la v0.4.0.
-2. Después `authz-tests`.
-3. Luego `secure-design`.
+2. ~~`authz-tests`~~: la matriz está en `security-fix/references/authz-tests.md` (v0.5.4).
+3. ~~`secure-design`~~: modo Design en el checklist (v0.5.4).
 
 No previsto: ejecutar las evals en la CI. Una ejecución completa cuesta unos 13 $, así que el mantenedor la lanza antes de un release que cambia una skill.
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseArgs, missingMentions, verdictFrom, verdictConsistent, aggregate, summaryMarkdown } from './lib.mjs';
+import { parseArgs, missingMentions, verdictFrom, verdictConsistent, verdictAccepted, aggregate, summaryMarkdown } from './lib.mjs';
 
 test('arguments: positional plus --repeat anywhere, bounded', () => {
   assert.deepEqual(parseArgs(['out', 'claude-sonnet-5-5', '--repeat', '3', 'a,b']), { outArg: 'out', model: 'claude-sonnet-5-5', only: 'a,b', repeat: 3 });
@@ -34,6 +34,11 @@ test('verdict must follow from the table', () => {
   assert.equal(verdictConsistent(p0warn, 'PASS WITH ISSUES'), true);
   assert.equal(verdictConsistent(allOk, 'PASS'), true);
   assert.equal(verdictConsistent(allOk, null), false);
+  assert.equal(verdictAccepted('Design: P0-02 applies. A relative changes childId.', false, true), true);
+  assert.equal(verdictAccepted('Verdict: BLOCK\n| P0-02 | x | NOT MET | y | V8 |', false, true), false);
+  assert.equal(verdictAccepted('Verdict: BLOCK\n| P0-02 | x | NOT MET | y | V8 |', true), true);
+  assert.equal(verdictAccepted(`Verdict: BLOCK\n${p0fail}`, false), true);
+  assert.equal(verdictAccepted(`Verdict: PASS\n${p0fail}`, false), false);
 });
 
 test('gate: critical needs every repeat, others two thirds', () => {

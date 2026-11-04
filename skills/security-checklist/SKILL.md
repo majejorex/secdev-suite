@@ -1,16 +1,16 @@
 ---
 name: security-checklist
-description: Reviews the security of a change, a feature or a whole repo with evidence, control by control, and gives a verdict. Use it whenever the user asks if something is secure, can be shipped, published or released, or to review its security, even briefly ("Can we ship this?", "Review the security of this change", «¿es seguro?», «¿podemos publicar esto?», «revisa la seguridad»). Also use it when designing, or before finishing, a task that touches auth, permissions, other users' data, payments, uploads, secrets, access rules (Firestore, Storage, RLS), endpoints or callables, sessions or tokens, CORS/CSP, desktop IPC, app signing, CI/CD, Dockerfiles, health or minors' data, or LLM features; also to create or update SECURITY-PROFILE.md. Not for style, copy or refactors.
+description: Use it for sign-off whenever the user asks if something is secure, can be shipped, published or released, or to review its security, even briefly ("Can we ship this?", "Review the security of this change", «¿es seguro?», «¿podemos publicar esto?», «revisa la seguridad»), and before finishing a task. Use Design mode when designing a task that touches auth, permissions, other users' data, payments, uploads, secrets, access rules (Firestore, Storage, RLS), endpoints or callables, sessions or tokens, CORS/CSP, desktop IPC, app signing, CI/CD, Dockerfiles, health or minors' data, or LLM features, including inside another design process. Also to create or update SECURITY-PROFILE.md. Not for style, copy or refactors.
 ---
 
 # Security checklist
 
-Checks a change, a feature or a repo against OWASP ASVS 5.0, API Security Top 10 2023 and MASVS 2.1, control by control, with evidence. Never trust the frontend or received data, nor assume an authenticated user may access any resource. Not a vulnerability audit.
+Checks a change, a feature or a repo against OWASP ASVS 5.0, API Security Top 10 2023 and MASVS 2.1, control by control, with evidence. Never trust the frontend or received data, nor assume an authenticated user may access any resource.
 
 ## Modes
 
-- **Design** (before code): applicable controls and 2-5 concrete abuse cases ("a relative changes `childId` and reads another minor's file"). No verdict.
-- **Sign-off** (before calling it done, a PR or a release): verify each applicable control and give a verdict. The default.
+- **Design** (before code, during design too): applicable controls and 2-5 abuse cases ("a relative changes `childId` and reads another minor's file"). No verdict, no code.
+- **Sign-off** (the user asks to finish, ship, publish or review): verify each applicable control and give a verdict.
 - **Profile** (asked to create or update `SECURITY-PROFILE.md`, or offered after a repo or release review with accepted risks or answered UNVERIFIED rows): write it from [profile.md](references/profile.md) only after a yes; it counts once on the default branch.
 
 ## Procedure
@@ -28,7 +28,7 @@ Checks a change, a feature or a repo against OWASP ASVS 5.0, API Security Top 10
    No evidence, no MET. Not evidence: "it seems that", a comment saying it is safe, generated or vendored code (`node_modules/`, `dist/`), a test that mocks the check it proves.
 
    **Refute pass.** Before the verdict, re-open every MET citation and try to break it: another route that skips the check, a field the allowlist misses, a role read from the client. If it does not survive, it becomes NOT MET or UNVERIFIED.
-6. **Verdict**, derived, not judged. Write `Blocking (P0 NOT MET):` first, with every P0 at NOT MET by ID.
+6. **Verdict** (sign-off only), derived, not judged. Write `Blocking (P0 NOT MET):` first, with every P0 at NOT MET by ID.
    - **BLOCK** if it lists any, with no exception (a small fix, an open item or a missing P0-15 test still block).
    - **PASS WITH ISSUES** if no P0 is NOT MET but something is UNVERIFIED or a P1/P2 is NOT MET. Before a release, the user confirms each UNVERIFIED P0 explicitly.
    - **PASS** if everything applicable is MET or justified N/A.
@@ -43,7 +43,7 @@ Standard: ASVS 5.0 chapter (V), API Top 10 2023 risk (API) or MASVS 2.1 control.
 |----|---------|---------------|----------|
 | P0-01 | **Secure authentication**, MFA for admins | Identity provider, or passwords with Argon2id/bcrypt/scrypt; reset links single-use, short-lived, no user enumeration; staff MFA enforced on the server; re-authentication before changing email, MFA or recovery data, deleting the account or paying | V6, V7.5, V11.4, API2, MASVS-AUTH-1, MASVS-AUTH-3 |
 | P0-02 | **Backend authorization** on every request; never roles, IDs or permissions from the client | Identity from the verified token, never a header, query or body field (`X-User-Id`); roles from claims or the server DB; admin routes check the role on the server (a hidden link or a middleware-only check is not enough) | V8.2, V8.3, API1, API5 |
-| P0-03 | **Data isolation** between users and tenants (BaaS rules or RLS) | Rules tie the resource to the `uid` or tenant; writes limited to allowed fields (`keys().hasOnly`/`affectedKeys()` in rules, a field allowlist in the API) so nobody sets their own `role` or `balance` (**mass assignment**); tests that read and write other people's data | V8.2, V8.4, API1, API3 |
+| P0-03 | **Data isolation** between users and tenants (rules, RLS, or handler) | Write this ID for a client id. Rules tie the resource to the `uid` or tenant; writes limited to allowed fields (`keys().hasOnly`/`affectedKeys()` in rules, a field allowlist in the API) so nobody sets their own `role` or `balance` (**mass assignment**); tests that read and write other people's data | V8.2, V8.4, API1, API3 |
 | P0-04 | **Protected secrets**: nothing privileged in the frontend, apps or repo | Grep `sk_live`, `-----BEGIN`, `service_account`, `AKIA`, history too (`git log --oneline -G '<pattern>'`); no `*.jks`/`*.p12` in the repo; a committed key is rotated; `EXPO_PUBLIC_`/`NEXT_PUBLIC_` are public | V13.3, MASVS-CRYPTO-2 |
 | P0-05 | **Server-side input validation** against injection and XSS | Schema (zod, pydantic) on every input; parameterized queries; encoded output; no `eval`/`innerHTML` with external data | V1, V2.2, MASVS-CODE-4 |
 | P0-06 | **Secure sessions**: expiry, revocation, storage; HttpOnly, Secure, SameSite cookies | Expiry and refresh; revoked on logout, password change or ban. Web: browser storage allowed (ASVS 14.3.3) with CSP. Mobile: own tokens in Keychain/Keystore; own long-lived tokens in localStorage or AsyncStorage: NOT MET; Firebase persistence in AsyncStorage: UNVERIFIED (masvs-2.md) | V7, V9, V3.3, V14.3, MASVS-STORAGE-1 |
@@ -88,20 +88,23 @@ Standard: ASVS 5.0 chapter (V), API Top 10 2023 risk (API) or MASVS 2.1 control.
 
 ## Output format
 
+Design omits `Verdict:`. Sign-off writes that exact line. Each ID is written in full (`P0-02`, never `P0-01/02`).
+
 ```
 Blocking (P0 NOT MET): <IDs, or none>
 Verdict: BLOCK | PASS WITH ISSUES | PASS
 Scope: <what>   Stack: <tags>   Standards: <ASVS/API/MASVS>
 
-| ID | Control | Status | Evidence / what is missing | Standard |
-|----|---------|--------|----------------------------|----------|
-| P0-02 | Backend authorization | NOT MET | functions/src/x.ts:40 does not check the owner (BOLA) | V8.2 · API1 |
+| ID | Control | Status | Evidence | Standard |
+|----|---------|--------|----------|----------|
+| P0-03 | Data isolation | NOT MET | firestore.rules:12 missing hasOnly (mass assignment) | V8.2 · API3 |
 
-Open items: P0 NOT MET, then P1, P2, UNVERIFIED.
-Not checked: <files or controls left out, and why>
+MET: P0-02 and P0-03 functions/src/x.ts:40 (client id)
+N/A: P0-13 no Set-Cookie or cookies() in the repo
+Not checked: <left out, and why>
 ```
 
-One row per applicable control; N/A on one line at the end. Each NOT MET names the risk (BOLA, mass assignment, SSRF, prompt injection…). The `Verdict:` line and the table always reach the final answer.
+Rows: NOT MET and UNVERIFIED only. Next to hasOnly write "mass assignment". MET and N/A are one line each.
 
 ## Rules
 

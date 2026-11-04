@@ -19,8 +19,9 @@ const PATH_RULES = [
 
 const CONTENT_RULES = [
   ['auth and sessions', /\b(req|request)\.auth\b|verifyIdToken|setCustomUserClaims|revokeRefreshTokens|getAuth\(|signInWith\w*|createUserWith\w*|\bpassword\b|jsonwebtoken|\bjwt\b|bcrypt|argon2|\b(refresh|access|id|session)Token\b|multiFactor|\bmfa\b|\btotp\b|reauthenticate\w*|updatePassword|updateEmail|verifyBeforeUpdateEmail/i],
-  ['roles and permissions', /\b(isAdmin|isStaff|customClaims|permissions?|capabilit(y|ies))\b|\brole(s)?\s*[:=]|\ballow\s+(read|write|create|update|delete|list|get)\b/],
-  ['endpoints and callables', /\bon(Call|Request)\s*\(|\b(app|router)\.(get|post|put|patch|delete|use)\s*\(|export\s+(async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b/],
+  ['roles and permissions', /\b(isAdmin|isStaff|customClaims|permissions?|capabilit(y|ies))\b|\brole(s)?\s*[:=]|\ballow\s+(read|write|create|update|delete|list|get)\b|\[Authorize\b/],
+  ['endpoints and callables', /\bon(Call|Request)\s*\(|\b(app|router)\.(get|post|put|patch|delete|use)\s*\(|export\s+(async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b|\bhttp\.HandleFunc\b|\.(GET|POST|PUT|PATCH|DELETE)\(\s*["'`]|Map(Get|Post|Put|Patch|Delete)\b|\baxum::|\.route\(\s*["'`]\//],
+  ['access rules', /\bCREATE\s+POLICY\b|auth\.uid\(\)/i],
   ['payments and webhooks', /\bstripe\b|paymentIntent|constructEvent|\bwebhook|\brefund/i],
   ['client-side token or data storage', /\bAsyncStorage\b|\blocalStorage\b|\bsessionStorage\b|\bSecureStore\b|document\.cookie|Set-Cookie/],
   ['file uploads', /\buploadBytes|\bgetSignedUrl|\bmulter\b|\bupload(File|Image|Document)?\s*\(|adm-zip|\bunzipper\b|\byauzl\b|\bJSZip\b|\bexif/i],
