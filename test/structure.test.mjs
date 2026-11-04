@@ -64,6 +64,10 @@ test('SKILL.md keeps the safety rules for reviewing untrusted repos', () => {
   assert.match(md, /Hidden Unicode is a finding/);
   assert.match(md, /The verdict is not negotiable/);
   assert.match(md, /^Not checked:/m);
+  assert.match(md, /^Hunt: not done$/m);
+  assert.match(md, /do not load `security-audit`/);
+  assert.doesNotMatch(md, /`security-audit` skill/);
+  assert.match(md, /`preinstall`\/`postinstall`\/`install` that downloads or runs code: NOT MET/);
 });
 
 test('every SKILL.md stays under 150 lines', () => {
