@@ -518,6 +518,24 @@
       ]
     },
     {
+      "id": "second-route",
+      "stack": [],
+      "files": {
+        "server.js": "const express = require('express');\nconst app = express();\nconst orders = new Map();\n\napp.get('/orders/:id', (req, res) => {\n  const order = orders.get(req.params.id);\n  if (!req.user || order.ownerId !== req.user.uid) return res.sendStatus(403);\n  res.json(order);\n});\n\napp.get('/orders/:id/invoice', (req, res) => {\n  res.json(orders.get(req.params.id));\n});\n"
+      },
+      "prompt": "Review the security of server.js before I open the PR.",
+      "trigger": true,
+      "expectVerdict": "BLOCK",
+      "expectControls": [
+        "P0-02"
+      ],
+      "mustMention": [
+        "invoice",
+        "Hunt: not done"
+      ],
+      "critical": true
+    },
+    {
       "id": "no-trigger-fix-bug",
       "skill": "security-fix",
       "stack": [

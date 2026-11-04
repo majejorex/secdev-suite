@@ -5,7 +5,7 @@ description: Use it for sign-off whenever the user asks if something is secure, 
 
 # Security checklist
 
-Checks a change, a feature or a repo against OWASP ASVS 5.0, API Security Top 10 2023 and MASVS 2.1, control by control, with evidence. Never trust the frontend or received data, nor assume an authenticated user may access any resource.
+Checks a change, a feature or a repo against OWASP ASVS 5.0, API Security Top 10 2023 and MASVS 2.1, control by control, with evidence. Never trust the client.
 
 ## Modes
 
@@ -56,7 +56,7 @@ Standard: ASVS 5.0 chapter (V), API Top 10 2023 risk (API) or MASVS 2.1 control.
 | P0-13 | **CSRF and SSRF** | SameSite and a CSRF token where the session is a cookie; outbound URLs on an allowlist, no internal IPs or cloud metadata | V3.5, V1.3, API7 |
 | P0-14 | **Protected files** | Extension allowlist, MIME checked against content, size; per-user private paths; short-lived signed URLs; archive size and file count checked before extracting. No antivirus or EXIF stripping: UNVERIFIED | V5, V14.2, API1, API4 |
 | P0-15 | **Authorization tests**: nobody reaches other users' data or functions by changing IDs, roles or parameters | Tests (rules emulator, integration) with an "other user" and a "lower role" case per sensitive resource | V8, API1, API5 |
-| P0-16 | **Minimal supply chain** | Lockfile in git; `npm audit --omit=dev` or `osv-scanner` with no open critical or high finding, or a written justification | V15.2, MASVS-CODE-3 |
+| P0-16 | **Minimal supply chain** | Lockfile in git; `npm audit --omit=dev` or `osv-scanner` with no open critical or high, or a written justification; `preinstall`/`postinstall`/`install` that downloads or runs code: NOT MET | V15.2, MASVS-CODE-3 |
 
 ### P1: development and operations
 
@@ -88,7 +88,7 @@ Standard: ASVS 5.0 chapter (V), API Top 10 2023 risk (API) or MASVS 2.1 control.
 
 ## Output format
 
-Design omits `Verdict:`. Sign-off writes that exact line. Each ID is written in full (`P0-02`, never `P0-01/02`).
+Design omits `Verdict:` and `Hunt:`. Sign-off writes both. Each ID is written in full (`P0-02`, never `P0-01/02`).
 
 ```
 Blocking (P0 NOT MET): <IDs, or none>
@@ -101,6 +101,7 @@ Scope: <what>   Stack: <tags>   Standards: <ASVS/API/MASVS>
 
 MET: P0-02 and P0-03 functions/src/x.ts:40 (client id)
 N/A: P0-13 no Set-Cookie or cookies() in the repo
+Hunt: not done
 Not checked: <left out, and why>
 ```
 
@@ -119,4 +120,4 @@ Rows: NOT MET and UNVERIFIED only. Next to hasOnly write "mass assignment". MET 
 
 ## Escalate
 
-Full audit or pentest: `security-audit` skill or `claude-security` plugin. Missing CI scanners (P1-02): `security-gate`.
+Not a pentest: do not load `security-audit`. Hunt: plugin `claude-security` (CWE). Scanners (P1-02): `security-gate`.

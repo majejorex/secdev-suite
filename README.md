@@ -37,19 +37,19 @@
 
 You ask your agent for order refunds. It writes them, the tests pass, and it tells you it's done. Nobody checked whether a customer can refund someone else's order by changing an ID.
 
-secdev runs that check. It detects your stack when the session starts, warns you when an edit touches something sensitive, and before the task is closed it goes through the checklist one control at a time. Every control needs evidence, either a `file:line` or a test, so the verdict at the end can be checked later.
+secdev runs that check. On session start it names the stack. When an edit touches auth, rules, payments, uploads or secrets, a hook reminds the agent once. Before the task is closed, the checklist goes through the controls that apply. Each one needs a `file:line` or a test. The sign-off ends with a verdict and the line `Hunt: not done`: the pass checked these controls and did not look for bugs outside the list.
 
 ## Can I trust it?
 
-You are installing code that runs in every session, so here is what you can check yourself:
+This code runs in every session. Here is what you can check yourself.
 
-- **Small and readable.** Zero dependencies, only Node and `node:test`. The hooks are a few short files in [`hooks/`](hooks/); the skills are Markdown.
-- **Hooks that stay out of the way.** Each one exits 0, runs in under 1 second, prints at most 5 lines and prints nothing when there is nothing to say. They remind; they never block. Every hook has tests.
-- **One network call.** At most once a day, a background process reads the public `plugin.json` to tell you about a new version. It sends nothing about your project and can be switched off with `SECDEV_NO_UPDATE_CHECK=1`.
-- **The reviewed repo is data.** The skills treat comments and docs in the repo as data, report text aimed at the reviewer as a finding (prompt injection), and never run code from the repo you review.
-- **Standards copied, not remembered.** OWASP IDs and titles are copied from the official repositories, with the date they were checked.
-- **Measured, not claimed.** Each release that changes a skill runs the [evals](docs/evals/) on a pinned model, 3 times per case. Critical cases must pass every time.
-- **Protected releases.** `main` needs the checks `test`, `secrets`, `dependencies` and `sast`, and the `v*` tags cannot be moved. See [Updating safely](#updating-safely) to review the `hooks/` diff before each update.
+- Zero dependencies. Tests use Node and `node:test`. The hooks are short files in [`hooks/`](hooks/). The skills are Markdown.
+- Each hook exits 0, finishes in under 1 second, prints at most 5 lines, and prints nothing when it has nothing to say. Hooks remind. They do not block an edit. Every hook has tests.
+- At most once a day, a background process reads the public `plugin.json` and tells you if a newer version is on `main`. It sends nothing about your project. Set `SECDEV_NO_UPDATE_CHECK=1` to turn that off.
+- Comments and docs in the repo you review are data. Text aimed at the reviewer is reported as prompt injection. The skills do not run that repo's code.
+- OWASP IDs and titles are copied from the official repositories, with the date they were checked.
+- A release that changes a skill runs the [evals](docs/evals/) on a pinned model, 3 times per case. Critical cases have to pass every time.
+- `main` needs the checks `test`, `secrets`, `dependencies` and `sast`. The `v*` tags cannot be moved. Before you update, read the `hooks/` diff. See [Updating safely](#updating-safely).
 
 ## Install
 
@@ -66,15 +66,15 @@ Or from a terminal:
 claude plugin marketplace add majejorex/secdev-suite && claude plugin install secdev@secdev-suite
 ```
 
-Restart Claude Code to load it. Check it with `claude plugin list`: it shows `secdev@secdev-suite` and its version.
+Restart Claude Code. `claude plugin list` should show `secdev@secdev-suite` and its version.
 
-Auto-update is off by default for this marketplace, as for any third-party one. Keep it off: when a new version comes out, secdev tells you and you update after reviewing it (see "Updating safely").
+Auto-update is off for this marketplace, as it is for any third-party one. Leave it off. When a new version comes out, secdev tells you, and you update after reading the diff (see "Updating safely").
 
-To develop without installing: `claude --plugin-dir /path/to/secdev-suite`.
+To try a clone without installing: `claude --plugin-dir /path/to/secdev-suite`.
 
 ## Install as a skill (other agents)
 
-The three skills in [`skills/`](skills/) are plain `SKILL.md` files, so any agent that reads the open skill format can use them without the plugin. Requires Node.js 22.20+ for the installer ([`skills` CLI](https://github.com/vercel-labs/skills)):
+The three skills in [`skills/`](skills/) are plain `SKILL.md` files. Any agent that reads that format can use them without the plugin. The installer needs Node.js 22.20+ ([`skills` CLI](https://github.com/vercel-labs/skills)):
 
 ```bash
 npx skills add majejorex/secdev-suite --skill security-checklist --skill security-fix --skill security-gate   # the three skills
@@ -82,21 +82,21 @@ npx skills add majejorex/secdev-suite --skill security-checklist -a codex   # on
 npx skills add majejorex/secdev-suite -g                                # every project, not just this one
 ```
 
-Or copy a folder by hand into your agent's skills directory (for Claude Code, `~/.claude/skills/security-checklist/`). Keep `references/` next to its `SKILL.md`.
+You can also copy a folder into the agent's skills directory (for Claude Code, `~/.claude/skills/security-checklist/`). Keep `references/` next to its `SKILL.md`.
 
-What you get and what you don't:
+`npx skills add` puts them in `.agents/skills/` in the project. Claude Code gets a symlink. `-g` puts them in your home directory. Without `--skill`, the installer offers these three skills and nothing else. `npx skills list` shows where they landed. Checked on 2026-11-03 with `-a claude-code -a codex`.
 
-- **Where it lands:** `.agents/skills/` in the project (Claude Code gets a symlink), or your home directory with `-g`. Without `--skill`, the installer offers the three skills and nothing else. Check with `npx skills list`.
-- **Same:** the checklist, the fix skill and the CI gate, triggered by the same plain-words requests ("Can we ship this?", "fix the P0s").
-- **Not included:** the two hooks (stack detection at session start, reminders on sensitive edits) and the daily version check. Those only exist in the Claude Code plugin. Without them, ask for the review yourself.
-- **Names:** the skills point to each other as `secdev:security-fix`. Installed standalone, the name is the folder name, `security-fix`.
-- **Use it:** open your agent in the project and ask in plain words: "Can we ship this?", "Review the security of this change", "fix P0-02", "Add a security gate to CI". If your agent lists skills (Claude Code `/skills`, Codex `$`), pick `security-checklist` by name. If you asked whether it is secure or ready to ship, the answer must end with a `Verdict:` line, a table of the NOT MET and UNVERIFIED controls, and the MET controls on one line. If it does not, the skill was not loaded.
-- **Check the install:** `npx skills list` shows the three skills and where they live. Tested on 2026-11-03 with `-a claude-code -a codex`.
-- **Updates:** `npx skills update`. Review the diff first, as in [Updating safely](#updating-safely).
+You get the checklist, the fix skill and the CI gate, from the same sentences ("Can we ship this?", "fix the P0s"). You do not get the two hooks or the daily version check. Those exist only in the Claude Code plugin. Without them, ask for the review yourself.
+
+Inside the plugin the skills call each other as `secdev:security-fix`. Installed on their own, the name is the folder: `security-fix`.
+
+Open the agent in the project and ask in plain words: "Can we ship this?", "Review the security of this change", "fix P0-02", "Add a security gate to CI". If the agent lists skills (Claude Code `/skills`, Codex `$`), pick `security-checklist`. When you asked whether it is secure or ready to ship, the answer has to end with a `Verdict:` line, `Hunt: not done`, a table of the NOT MET and UNVERIFIED controls, and the MET controls on one line. If that block is missing, the skill did not load.
+
+Updates: `npx skills update`. Read the diff first, as in [Updating safely](#updating-safely).
 
 ## Use it in any project
 
-Install once and it works in every project you open. There is nothing to configure per project.
+One install covers every project you open. There is nothing to configure per project.
 
 | Where do you want it | Command |
 |---|---|
@@ -104,7 +104,7 @@ Install once and it works in every project you open. There is nothing to configu
 | In one repo, for everyone who works on it | `claude plugin install secdev@secdev-suite --scope project`. It writes `enabledPlugins` to `.claude/settings.json` (see below). |
 | In one repo, only for you | `claude plugin install secdev@secdev-suite --scope local` |
 
-For a team, the repo's `.claude/settings.json` must also declare the marketplace, so a teammate who has never added it gets the plugin when they trust the folder. The install command writes only the second key, so add the first one by hand and commit the file:
+For a team, the repo's `.claude/settings.json` also has to name the marketplace, so a teammate who never added it still gets the plugin when they trust the folder. The install command writes only `enabledPlugins`. Add the marketplace by hand and commit the file:
 
 ```json
 {
@@ -117,47 +117,47 @@ For a team, the repo's `.claude/settings.json` must also declare the marketplace
 
 In a new project:
 
-1. **Open it with Claude Code.** If the project uses one of the stacks it knows, you will see `[secdev] Detected stack: ...`. It knows Firebase, Supabase, Expo, React Native and Capacitor, Electron and Tauri, Stripe, Next, Express, Fastify, Hono, Koa and Nest, LLM SDKs, Docker, and the languages Python, Go, Rust, Java and Kotlin, PHP, Ruby and .NET (with the API frameworks named in their manifests). With any other stack it stays silent, and the skills still work with the general ASVS checklist.
-2. **Work as usual.** When an edit touches something sensitive (auth, rules, payments, uploads, secrets, CI workflows, Dockerfiles...) the agent gets a reminder with the controls to check.
-3. **Before a PR or a release, ask** "Can we ship this?" or "Review the security of this change" (see the next section).
-4. **Once per repo, ask** "Add a security gate to CI". It shows you the workflow and what leaves the repo, and writes `.github/workflows/security.yml` only after your OK. Then, in GitHub (Settings, Rules), require the status checks `secrets`, `dependencies` and `sast`. Until you do, they only warn.
-5. **Check it is loaded:** `claude plugin list` shows `secdev@secdev-suite` and its version.
+1. Open it with Claude Code. On a stack it knows, you get `[secdev] Detected stack: ...`. It knows Firebase, Supabase, Expo, React Native and Capacitor, Electron and Tauri, Stripe, Next, Express, Fastify, Hono, Koa and Nest, LLM SDKs, Docker, and Python, Go, Rust, Java and Kotlin, PHP, Ruby and .NET (with the API frameworks named in their manifests). On any other stack it stays quiet. The skills still use the general ASVS checklist.
+2. Work as usual. An edit that touches auth, rules, payments, uploads, secrets, CI workflows or Dockerfiles leaves the agent a reminder with the controls to check.
+3. Before a PR or a release, ask "Can we ship this?" or "Review the security of this change" (see the next section).
+4. Once per repo, ask "Add a security gate to CI". It shows the workflow and what leaves the repo, and writes `.github/workflows/security.yml` only after you say yes. Then, in GitHub (Settings, Rules), require the status checks `secrets`, `dependencies` and `sast`. Until you do, they only warn.
+5. `claude plugin list` shows `secdev@secdev-suite` and its version.
 
-Good to know:
+The gate is GitHub Actions. On another CI provider the skill gives you the three commands.
 
-- The gate is for GitHub Actions. On another CI provider the skill gives you the three commands instead.
-- If the first run finds a secret in old history, rotate the secret first and purge the history after. Semgrep prints the line it flags, so a leaked secret also stays in the CI log, and a purge does not remove the log.
-- To remove it: `claude plugin uninstall secdev@secdev-suite` (add `--scope project` if you installed it that way). To keep it and only turn off the daily version check, set `SECDEV_NO_UPDATE_CHECK=1`.
+If the first run finds a secret in old history, rotate it first and purge the history after. Semgrep prints the line it flags, so a leaked secret also stays in the CI log. A purge does not remove that log.
+
+To remove the plugin: `claude plugin uninstall secdev@secdev-suite` (add `--scope project` if you installed it that way). To keep it and only turn off the daily version check, set `SECDEV_NO_UPDATE_CHECK=1`.
 
 ## Use it in practice
 
-You don't run anything special. You work as usual and ask in plain words, in English or Spanish. These are the four moments where it pays off.
+You don't run a command. You work as usual and ask in plain words, in English or Spanish.
 
 | When | What you type | What you get |
 |---|---|---|
-| **Before writing a feature** | "I'm going to add refunds for orders. Which security controls apply?" | *Design* mode: the controls that apply and 2-5 concrete abuse cases ("a customer changes `orderId` and refunds someone else's order"). No verdict, no code yet. |
-| **While you code** | Nothing. | If an edit touches auth, rules, payments, uploads, secrets… the hook reminds the agent once, naming the controls to check, for example `payments and webhooks (P2-02)`. |
-| **Before you open a PR** | "Can we ship this?" or "Review the security of this change." | *Sign-off* mode over the diff: a `Verdict:` line, one row per NOT MET or UNVERIFIED control (the evidence names the check, such as `hasOnly`), and the MET controls on one line. |
-| **Before a release** | "Review the security of the whole repo before the release." | The same, but every P0 applies. Controls the code can't show (MFA on the cloud console, backups, separate environments) come back as UNVERIFIED with what to check and where. |
+| Before writing a feature | "I'm going to add refunds for orders. Which security controls apply?" | Design mode: the controls that apply and 2-5 abuse cases ("a customer changes `orderId` and refunds someone else's order"). No verdict, and no code yet. |
+| While you code | Nothing. | If an edit touches auth, rules, payments, uploads or secrets, the hook reminds the agent once, with the controls to check, for example `payments and webhooks (P2-02)`. |
+| Before you open a PR | "Can we ship this?" or "Review the security of this change." | Sign-off on the diff: a `Verdict:` line, `Hunt: not done`, one row per NOT MET or UNVERIFIED control (the evidence names the check, such as `hasOnly`), and the MET controls on one line. |
+| Before a release | "Review the security of the whole repo before the release." | The same, and every P0 applies. What the code cannot show (MFA in the cloud console, backups, separate environments) comes back UNVERIFIED, with what to check and where. |
 
 ### Reading the result
 
-- **BLOCK**: a P0 control is not met. Don't release. Ask "fix P0-02" (or several at once) and run the review again.
-- **PASS WITH ISSUES**: no P0 fails, but something is UNVERIFIED or a P1/P2 fails. You can ship after you check the UNVERIFIED items yourself, usually in the cloud console. Before a release, a P0 at UNVERIFIED needs your explicit OK.
-- **PASS**: everything that applies is met, or is N/A with a reason.
+- **BLOCK.** A P0 is not met. Don't release. Ask "fix P0-02" (or several at once) and run the review again.
+- **PASS WITH ISSUES.** No P0 is NOT MET, and something is UNVERIFIED or a P1/P2 is NOT MET. Ship after you check the UNVERIFIED items yourself, usually in the cloud console. Before a release, a P0 at UNVERIFIED needs your explicit OK.
+- **PASS.** Everything that applies is MET, or N/A with a reason.
 
-The review never changes code on its own: you decide what to fix. When the fix for a NOT MET is obvious, it comes in one line, and the IDs (`P0-02`) let you refer to a finding later. To have them fixed, say "fix the P0s" or "fix P0-02": `secdev:security-fix` shows a plan, edits the code, adds the authorization test, re-verifies the fixed rows (3 passes at most) and leaves the commit to you.
+The review does not edit code unless you ask. An obvious fix for a NOT MET is one line, and the IDs (`P0-02`) are how you refer to a finding later. Say "fix the P0s" or "fix P0-02" and `secdev:security-fix` shows a plan, edits the code, adds the authorization test, re-checks the fixed rows (3 passes at most) and leaves the commit to you.
 
 ### Calling a skill by name
 
-The skills activate from plain words. If one does not, call it by name: in the Claude Code plugin they are `/secdev:security-checklist`, `/secdev:security-fix` and `/secdev:security-gate`; installed standalone they are `security-checklist`, `security-fix` and `security-gate` (in Codex, type `$` and pick one).
+The skills turn on from plain words. If one does not, call it. In the Claude Code plugin: `/secdev:security-checklist`, `/secdev:security-fix` and `/secdev:security-gate`. Installed on their own: `security-checklist`, `security-fix` and `security-gate` (in Codex, type `$` and pick one).
 
 ### Tips
 
-- **Name the scope** when it isn't obvious: "this diff", "the `functions/` folder", "the whole repo".
-- **Distrust a MET without evidence.** Every MET must cite a `file:line` or a test. If one doesn't, ask for it.
-- **UNVERIFIED is not a failure.** It means the code can't show it. Go and look where the report says, then tell the agent what you found.
-- **It's not an audit.** For a deep vulnerability hunt, use `security-audit` or `claude-security` (see below).
+- Name the scope when it is not obvious: "this diff", "the `functions/` folder", "the whole repo".
+- A MET without a `file:line` or a test is not a MET. Ask for the citation.
+- UNVERIFIED means the code cannot show it. Look where the report says, then tell the agent what you found.
+- A sign-off checks these controls and writes `Hunt: not done`. For a hunt, use the [Claude Security plugin](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-security/README.md). The skill named [security-audit](https://github.com/cloudflare/security-audit-skill) is a different product.
 
 ## How it works
 
@@ -169,20 +169,20 @@ The skills activate from plain words. If one does not, call it by name: in the C
 
 It looks for Firebase, Supabase, mobile (Expo, React Native, Capacitor), desktop (Electron, Tauri), Stripe, Next, API frameworks, LLM SDKs, Python and Docker in the project root and its direct subfolders.
 
-- If it finds any, it injects two fixed lines with the applicable standards and a reminder about the skill. It never prints repo content.
-- If it finds nothing, it prints nothing.
-- It never fails and doesn't follow symlinks.
-- Once a day, in the background, it checks the version published on `main`. If there is a newer one, it shows you a notice with the link to review what changes in `hooks/` and the command to update (see "Updating safely").
+- When it finds any, it injects two fixed lines: the standards that apply, and a reminder about the skill. It never prints repo content.
+- When it finds nothing, it prints nothing.
+- It does not fail the session, and it does not follow symlinks.
+- Once a day, in the background, it checks the version on `main`. If a newer one is published, the next session shows a notice with the `hooks/` diff and the update command (see "Updating safely").
 
 ### 2 · `PostToolUse` hook: warns once
 
-It runs on Edit, Write, MultiEdit and NotebookEdit. If an edit touches something risky, it reminds the agent to load the checklist before calling the task done.
+It runs on Edit, Write, MultiEdit and NotebookEdit. If the edit touches something risky, it tells the agent to load the checklist before calling the task done.
 
-- It decides from the file path (access rules, `.env`, keys and keystores, headers, desktop packaging, CI workflows, Dockerfiles and compose files) or from the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, app signing and updates, and edits to `SECURITY-PROFILE.md` (the one markdown file it watches).
-- Next to each category it names the checklist controls to look at first, for example `file uploads (P0-14)`.
-- It warns at most once per session and never blocks.
-- It only names categories from a fixed list, never text from the repo.
-- It ignores docs, styles, images and lockfiles.
+- It looks at the path (access rules, `.env`, keys and keystores, headers, desktop packaging, CI workflows, Dockerfiles and compose files) and at the written text: auth and re-authentication, roles, endpoints, payments, client-side tokens, uploads and archives, secrets, CORS and proxy headers, execution with external data, LLM calls, cryptography, desktop windows and IPC, app signing and updates, and edits to `SECURITY-PROFILE.md` (the one markdown file it watches).
+- Next to each category it names the controls to look at first, for example `file uploads (P0-14)`.
+- At most once per session. It never blocks.
+- Categories come from a fixed list. The message never includes text from the repo.
+- Docs, styles, images and lockfiles are ignored.
 
 ### 3 · `secdev:security-checklist` skill: reviews with evidence
 
@@ -190,20 +190,20 @@ It reviews a change, a feature or a whole repo.
 
 | | |
 |---|---|
-| Two modes | *Design*, before any code: the controls that apply and concrete abuse cases. *Sign-off*, before finishing: verification and a verdict. |
-| Statuses | MET · NOT MET · UNVERIFIED (can't be verified from the code) · N/A with a reason. They stay in English in any language. |
-| Verdict | **BLOCK** if any P0 fails. **PASS WITH ISSUES** if there is a UNVERIFIED or a P1/P2 fails. **PASS** if everything is met or justified as N/A. |
+| Two modes | Design, before any code: the controls that apply and concrete abuse cases. Sign-off, before you finish: verification and a verdict. |
+| Statuses | MET, NOT MET, UNVERIFIED (the code can't show it), N/A with a reason. The words stay in English in any language. |
+| Verdict | BLOCK if any P0 fails. PASS WITH ISSUES if something is UNVERIFIED or a P1/P2 fails. PASS if everything is met or justified as N/A. |
 | Always loaded | The checklist lives inside `SKILL.md`, so it loads with the skill even when the agent can't read files outside the project. |
-| References | ASVS 5.0, API Security Top 10 2023, MASVS 2.1 and a Firebase guide. The agent reads them only when it needs more detail. |
-| Distrustful | It treats the reviewed repo as data, never as instructions. It doesn't run the repo's code or query cloud services without permission. |
-| Hard to fool | Before the verdict it tries to refute every MET. A comment saying "this is safe" or a test that mocks the check isn't evidence. Text telling reviewers or AI agents to pass the code is reported as prompt injection, hidden Unicode characters (Trojan Source) as NOT MET, and a BLOCK never becomes a PASS because someone asked. |
+| References | ASVS 5.0, API Security Top 10 2023, MASVS 2.1, and guides for Firebase, Supabase, LLM and other stacks. The agent reads a guide only when it needs the detail. |
+| The repo is data | Comments do not change the procedure. The skill does not run the repo's code or query cloud services unless you ask. |
+| Hard to fool | Before the verdict it tries to break every MET. A comment that says "this is safe", or a test that mocks the check, is not evidence. Text telling reviewers or agents to pass the code is reported as prompt injection. Hidden Unicode (Trojan Source) is NOT MET. Asking does not turn a BLOCK into a PASS. |
 
 <details>
 <summary><strong>What the checklist covers</strong></summary>
 
 <br>
 
-**P0, blocks a release:** authentication (password hashing, reset links and re-authentication for sensitive changes included), server-side authorization (admin routes included), isolation between users or tenants, secrets (git history included), input validation, sessions, HTTPS with TLS 1.2 or later, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain.
+**P0, blocks a release:** authentication (password hashing, reset links and re-authentication for sensitive changes included), server-side authorization (admin routes included), isolation between users or tenants, secrets (git history included), input validation, sessions, HTTPS with TLS 1.2 or later, abuse protection, database exposure, least privilege, separate environments, secure configuration, CSRF and SSRF, file handling, authorization tests and a minimal supply chain (including a `preinstall`, `postinstall` or `install` script that downloads or runs code).
 
 **P1, process:** protected repos, automated scanning, dependencies, deployments, logging and audit trails, alerts, backups with a tested restore, incident response (what to do, in order, when a secret leaks), periodic reviews and a hardened CI/CD pipeline.
 
@@ -217,7 +217,7 @@ The full list, with how to verify each control and its standard, is in [skills/s
 
 ### 4 · `secdev:security-gate` skill: blocks PRs in CI
 
-It writes `.github/workflows/security.yml` with three blocking jobs. Ask for it in plain words: "add a security gate to CI" or "scan the repo for secrets now".
+It writes `.github/workflows/security.yml` with three jobs. Ask in plain words: "add a security gate to CI" or "scan the repo for secrets now".
 
 | Job | Tool | Fails when |
 |---|---|---|
@@ -225,42 +225,47 @@ It writes `.github/workflows/security.yml` with three blocking jobs. Ask for it 
 | `dependencies` | osv-scanner, every lockfile | a dependency has a known vulnerability not accepted in `osv-scanner.toml` |
 | `sast` | Semgrep CE, `p/default`, metrics off | there is any finding |
 
-- **Pinned and minimal:** the only action is `actions/checkout`, pinned to a SHA. gitleaks and osv-scanner are release binaries checked against their SHA-256, Semgrep is an image pinned by digest, and every job has `contents: read`. It works under the strictest repo policy: "allow only GitHub-owned actions" plus "require SHA pinning".
-- **It shows before writing:** it says what leaves the repo (package names to osv.dev, rule downloads from Semgrep) and writes the file only after your OK.
-- **One step left for you:** make the three jobs required status checks in branch protection. Until then they only warn.
-- **Run now:** it can also run the three tools locally once, with your permission. It ranks CVEs by CISA KEV first, then EPSS.
-- **Limit:** Semgrep prints the line it flags, so a secret in code also ends up in the CI log (gitleaks hides it). Rotate a leaked secret before anything else.
-- **Dogfooded:** this repo runs the same workflow, and a test keeps it identical to the template in the skill. On its first run it found two hidden Unicode bidi characters in our own tests.
+The only action is `actions/checkout`, pinned to a SHA. gitleaks and osv-scanner are release binaries checked against their SHA-256. Semgrep is an image pinned by digest. Every job has `contents: read`. That works under a repo policy of "allow only GitHub-owned actions" plus "require SHA pinning".
+
+Before it writes the file, it says what leaves the repo: package names go to osv.dev, and Semgrep downloads rules. It writes only after you say yes.
+
+You still have to mark the three jobs as required status checks in branch protection. Until then they only warn.
+
+It can also run the three tools locally once, if you allow it. It ranks CVEs by CISA KEV first, then by EPSS.
+
+Semgrep prints the line it flags, so a secret in code also ends up in the CI log. gitleaks hides the value. Rotate a leaked secret before anything else.
+
+This repo runs the same workflow, and a test keeps it identical to the template in the skill. The first run found two hidden Unicode bidi characters in our own tests.
 
 ### What it doesn't do
 
-It doesn't replace an audit. For that it points to:
+A sign-off is not a vulnerability hunt. For a hunt, use:
 
-- `security-audit` / `claude-security` for in-depth audits and pen tests;
-- `security-guidance` for automatic review of every diff.
+- the [Claude Security plugin](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-security/README.md) (`claude-security`). It reports CWE, not these rows. [security-audit](https://github.com/cloudflare/security-audit-skill) is Cloudflare's audit skill, a different product;
+- `security-guidance` for an automatic look at every diff.
 
 ## Updating safely
 
 > [!IMPORTANT]
 > The hooks are code that runs in every one of your sessions. Updating the plugin means running new code everywhere.
 
-- Keep **auto-update off** for this marketplace. It is already off by default for third-party marketplaces; you can check it in `/plugin` → Marketplaces. secdev tells you itself when there is a new version.
+- Leave auto-update off for this marketplace. Third-party marketplaces already default to off. You can check it in `/plugin`, then Marketplaces. secdev tells you when there is a new version.
 - When a new version is published, the next session shows a notice like this one:
   ```
   secdev 0.3.4 is available (installed: 0.3.3). Review what changes in hooks/ before updating:
   https://github.com/majejorex/secdev-suite/compare/v0.3.3...v0.3.4 · Update: claude plugin marketplace
   update secdev-suite && claude plugin update secdev@secdev-suite, then restart Claude Code.
   ```
-  1. Open the link and read the diff of `hooks/`: that code will run in every session.
+  1. Open the link and read the diff of `hooks/`. That code will run in every session.
   2. Update with one command (inside Claude Code, prefix it with `!`):
      ```
      claude plugin marketplace update secdev-suite && claude plugin update secdev@secdev-suite
      ```
   3. Restart Claude Code.
-- How the check works: at most once a day, a background process downloads the public file `.claude-plugin/plugin.json` from `main` and keeps only the version. It sends nothing about your project, and the session never waits for it. The result is cached in the plugin's data folder (`CLAUDE_PLUGIN_DATA`).
-- To turn it off, set `SECDEV_NO_UPDATE_CHECK=1` in your environment.
-- From a clone, the same review: `git fetch --tags && git diff <installed-tag>..origin/main -- hooks/ .claude-plugin/`.
-- `v*` tags are protected and can't be moved or deleted, so a diff between tags can be trusted.
+- How the check works: at most once a day, a background process downloads `.claude-plugin/plugin.json` from `main` and keeps only the version. It sends nothing about your project, and the session does not wait for it. The result is cached in the plugin data folder (`CLAUDE_PLUGIN_DATA`).
+- To turn it off, set `SECDEV_NO_UPDATE_CHECK=1`.
+- From a clone: `git fetch --tags && git diff <installed-tag>..origin/main -- hooks/ .claude-plugin/`.
+- `v*` tags are protected. They cannot be moved or deleted, so a diff between tags can be trusted.
 
 ## Testing
 
@@ -268,32 +273,32 @@ It doesn't replace an audit. For that it points to:
 npm test
 ```
 
-No dependencies, just Node ≥ 20 and `node:test`. The tests come in two groups:
+No dependencies, just Node ≥ 20 and `node:test`. Two groups:
 
-- **Hooks**: detection, output, that they never fail, and that they finish in under 1 s.
-- **Structure**: valid JSON, frontmatter, internal links, and that the evals cite real controls.
+- Hooks: detection, output, that they never fail, and that they finish in under 1 s.
+- Structure: valid JSON, frontmatter, internal links, and that the evals cite real controls.
 
-`evals/cases.json` holds behaviour cases: whether the skill activates and which controls it flags. `node evals/run.mjs <output-folder>` runs them for real. For each case it creates a throwaway project, runs `claude -p --plugin-dir .` and reports:
+`evals/cases.json` holds behaviour cases: whether the skill activates, and which controls it flags. `node evals/run.mjs <output-folder>` runs them for real. For each case it creates a throwaway project, runs `claude -p --plugin-dir .` and reports:
 
 - whether the hook output was seen;
 - whether the skill was loaded;
 - whether it read its references without errors;
 - which controls it cited;
-- whether the answer names the key words for the case (`mustMention`, for example `constructEvent` for a Stripe webhook). Each item can list synonyms, and a missing one fails the case.
+- whether the answer names the key words for the case (`mustMention`, for example `constructEvent` for a Stripe webhook). Each item can list synonyms. A missing one fails the case.
 
-It costs about $0.21 per case with Sonnet, so it isn't part of `npm test`.
+About $0.21 per case with Sonnet, so this is not part of `npm test`.
 
-**Stability.** A model doesn't answer the same way twice, so one green run proves little. Before a release that changes a skill:
+A model does not answer the same way twice, so one green run proves little. Before a release that changes a skill:
 
 ```
 node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 ```
 
-- Every case runs 3 times, at most 8 at once, with the model pinned by its exact ID (the model actually used is recorded).
-- **Gate:** a `critical` case (the ones that must BLOCK, the prompt-injection case and the cases that must not activate) passes 3/3; any other case at least 2/3. A case that sometimes fails is reported as `flaky`.
-- A case passes only if the skill loads, the expected controls are cited, the key words are named (with synonyms), and the verdict follows from its own table: a P0 at NOT MET means BLOCK, and any NOT MET or UNVERIFIED rules out PASS.
-- The run writes `summary.md`. It is copied to `docs/evals/<version>.md`, so results can be compared between versions.
-- Cost: about $18 per run (29 cases × 3).
+- Every case runs 3 times, at most 8 at once, with the model pinned by its exact ID. The model actually used is recorded.
+- Gate: a `critical` case (the ones that must BLOCK, the prompt-injection case, and the cases that must not activate) passes 3/3. Any other case passes at least 2/3. A case that sometimes fails is `flaky`.
+- A case passes only if the skill loads, the expected controls are cited, the key words are named (with synonyms), and the verdict follows from its own table. A P0 at NOT MET means BLOCK. Any NOT MET or UNVERIFIED rules out PASS.
+- The run writes `summary.md`. Copy it to `docs/evals/<version>.md`.
+- Cost: about $18 per run (30 cases × 3).
 
 ## Roadmap
 
@@ -309,41 +314,41 @@ node evals/run.mjs <folder-outside-the-repo> claude-sonnet-5-5 --repeat 3
 | F3 | Threat intelligence, manual version (`/intel-review`) | Done |
 | F4 | Evals that measure stability: 3 repeats per case, a release gate and a pinned model | Done, v0.4.3 and v0.4.4 |
 
-**Order decided on 2026-11-02:**
+Order decided on 2026-11-02:
 
-1. ~~F2 first~~: done in v0.4.0.
-2. ~~`authz-tests`~~: the matrix is in `security-fix/references/authz-tests.md` (v0.5.4).
-3. ~~`secure-design`~~: design mode in the checklist (v0.5.4).
+1. F2 first: done in v0.4.0.
+2. `authz-tests`: the matrix is in `security-fix/references/authz-tests.md` (v0.5.4).
+3. `secure-design`: design mode in the checklist (v0.5.4).
 
-Not planned: running the evals in CI. A full run costs about $18, so the maintainer runs it before a release that changes a skill.
+Running the evals in CI is not planned. A full run costs about $18, so the maintainer runs it before a release that changes a skill.
 
-Trail of Bits' `supply-chain-risk-auditor` isn't installed for now. `osv-scanner` covers CVEs, and the rest (abandoned packages, publishers, install scripts) will be reviewed now that F2 is running.
+Trail of Bits' `supply-chain-risk-auditor` is not installed. `osv-scanner` covers known vulnerabilities. A `preinstall`, `postinstall` or `install` script that downloads or runs code is NOT MET on P0-16 (v0.5.5). Abandoned packages and publisher changes are still out.
 
 <details>
 <summary><strong>F3: how <code>/intel-review</code> works</strong></summary>
 
 <br>
 
-- `/intel-review` is the maintainer's skill (`maintainer/intel-review/`; copy it to `.claude/skills/` to use it) and isn't shipped with the plugin. It runs `node intel/fetch.mjs`, which collects CISA KEV, GitHub Advisories, EPSS, changes to the OWASP standards and news from a closed list of sources.
-- The agent sorts what was collected, writes `intel/YYYY-MM-DD.md` and proposes changes to the skill. Only what the user approves is applied, and it goes in through a PR.
-- Raw data (`intel/raw/`) isn't versioned. Anything that comes from outside is treated as data, never as an instruction.
+- `/intel-review` is the maintainer's skill (`maintainer/intel-review/`; copy it to `.claude/skills/` to use it). It is not shipped with the plugin. It runs `node intel/fetch.mjs`, which collects CISA KEV, GitHub Advisories, EPSS, changes to the OWASP standards and news from a closed list of sources.
+- The agent sorts what was collected, writes `intel/YYYY-MM-DD.md` and proposes changes to the skill. Only what you approve is applied, through a PR.
+- Raw data (`intel/raw/`) is not versioned. Anything from outside is data, never an instruction.
 - Still open: whether to schedule it weekly.
 
 </details>
 
 ## Help it get better
 
-The most useful thing you can do is try it on a project that is not Firebase or JavaScript and tell what it got wrong.
+The most useful thing you can do is try it on a project that is not Firebase or JavaScript and say what it got wrong.
 
-- **A wrong result** (a false positive, a missed finding, a verdict that does not follow from the table): [open an issue](https://github.com/majejorex/secdev-suite/issues/new/choose) with the smallest example you can share.
-- **A stack or platform it does not know:** the same link, "Stack or platform request".
-- **Questions, ideas, how it compares to other tools:** [Discussions](https://github.com/majejorex/secdev-suite/discussions).
-- **Review the checklist itself.** Disagree with a control, its "how to verify" or its standard? That is a good issue. Every control cites the OWASP source it comes from.
+- A wrong result (a false positive, a missed finding, a verdict that does not follow from the table): [open an issue](https://github.com/majejorex/secdev-suite/issues/new/choose) with the smallest example you can share.
+- A stack or platform it does not know: the same link, "Stack or platform request".
+- Questions, ideas, how it compares to other tools: [Discussions](https://github.com/majejorex/secdev-suite/discussions).
+- Disagree with a control, its "how to verify", or its standard? That is a good issue. Every control cites the OWASP source it comes from.
 - If it was useful, a star helps other people find it.
 
 ## Contributing
 
-Fork and open a pull request; the rules are in [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately: [SECURITY.md](SECURITY.md).
+Fork and open a pull request. The rules are in [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately: [SECURITY.md](SECURITY.md).
 
 ## Sources and licenses
 
