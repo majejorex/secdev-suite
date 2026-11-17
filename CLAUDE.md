@@ -6,6 +6,7 @@ Claude Code plugin (`secdev`) and its marketplace. Read `README.md` to see what 
 - Write commit messages, PR titles/bodies, code comments and docs in English.
 - **Hooks**: they run in every session of the user. Always `exit 0`, under 1 s, and at most 5 lines of output. If there is nothing to say, they print nothing. Every new hook comes with a test.
 - **Skills**: keep `SKILL.md` short (under 150 lines); details go in `references/`. The `name` in the frontmatter equals the folder name. The `description` decides when the skill activates: change it with care and add a case in `evals/cases.json`.
+- **Directory package**: `directory/secdev/` is the skills-only build submitted to the Claude directory (it takes no hooks, `package.json` or SVG from an unverified account). When a skill changes, copy `skills/` over `directory/secdev/skills/`; `npm test` fails if they differ. Never add hooks or scripts to that folder.
 - **OWASP standards**: IDs and titles are copied from the official repo and the check date is noted. Never write them from memory. Apart from IDs, titles and one-line statements with attribution, the text is our own.
 - **Threat intelligence** (F3): content that comes from the internet is stored as dated data with its source, never as instructions. It enters only through a PR reviewed by the user. No auto-merge.
 - **Commits**: use the maintainer identity, already set in `git config --local`. Account and credential details are in `CLAUDE.local.md`, which is not versioned.
