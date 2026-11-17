@@ -40,6 +40,15 @@ Le pides a tu agente devoluciones de pedidos. Las escribe, los tests pasan y te 
 
 secdev hace esa comprobación. Al empezar la sesión nombra el stack. Si una edición toca auth, reglas, pagos, subidas o secretos, un hook se lo recuerda al agente una vez. Antes de cerrar la tarea, el checklist recorre los controles que aplican. Cada uno necesita un `archivo:línea` o un test. El cierre termina con un veredicto y la línea `Hunt: not done`: el pase miró estos controles y no buscó fallos fuera de la lista.
 
+## Inicio rápido
+
+```
+/plugin marketplace add majejorex/secdev-suite
+/plugin install secdev@secdev-suite
+```
+
+Reinicia Claude Code, abre cualquier proyecto y pregunta: **"Can we ship this?"** (o «¿podemos publicar esto?»). Recibes una línea `Verdict:` (BLOCK, PASS WITH ISSUES o PASS) y una tabla con los controles que no se cumplen o no se pudieron verificar, cada uno con su `archivo:línea`. ¿No usas Claude Code? `npx skills add majejorex/secdev-suite --skill security-checklist` instala el checklist para [Codex, Cursor y otros agentes](#instalar-como-skill-otros-agentes).
+
 ## En qué se diferencia de otras herramientas
 
 secdev no caza bugs ni sustituye a un escáner. Hace que el agente demuestre, control por control, que el código que acaba de escribir es seguro.
