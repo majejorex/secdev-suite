@@ -8,7 +8,7 @@
 <h1 align="center">secdev</h1>
 
 <p align="center">
-  <em>"Is it secure?" deserves a <code>file:line</code>, not a "looks fine to me".</em>
+  <em>Your agent says it's secure. secdev makes it show the <code>file:line</code>.</em>
 </p>
 
 <p align="center">

@@ -8,7 +8,7 @@
 <h1 align="center">secdev</h1>
 
 <p align="center">
-  <em>«¿Es seguro?» merece un <code>archivo:línea</code>, no un «a mí me parece bien».</em>
+  <em>Tu agente dice que es seguro. secdev le obliga a enseñar el <code>archivo:línea</code>.</em>
 </p>
 
 <p align="center">
