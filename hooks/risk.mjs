@@ -7,6 +7,13 @@ const SKIP_PATH = /(\.(md|mdx|txt|css|scss|sass|less|svg|png|jpe?g|gif|webp|ico|
 
 const PROFILE = /(^|\/)SECURITY-PROFILE\.md$/; // a .md file that still matters
 
+// Test files: fixtures are full of "password", "stripe" and "role=" that say nothing about risk.
+// Only the content rules are skipped; a test that is itself a risky path (a workflow, a .rules file) still warns.
+const TEST_PATH = /\.(test|spec)\.[^/]+$|(^|\/)(tests?|__tests__|e2e)\//i;
+
+// ARIA roles (role="button", role: 'dialog') are markup, not authorization.
+const ARIA = 'alert|alertdialog|article|banner|button|cell|checkbox|combobox|complementary|contentinfo|dialog|figure|grid|group|heading|img|link|listbox|listitem|log|menu|menubar|menuitem|navigation|option|presentation|progressbar|radio|radiogroup|region|row|separator|slider|status|switch|tab|tablist|tabpanel|textbox|timer|toolbar|tooltip|tree|treeitem';
+
 const PATH_RULES = [
   ['security profile', PROFILE],
   ['access rules', /(^|\/)(firestore|storage|database)\.rules(\.json)?$|(^|\/)supabase\/migrations\/[^/]+\.sql$/i],
@@ -19,7 +26,7 @@ const PATH_RULES = [
 
 const CONTENT_RULES = [
   ['auth and sessions', /\b(req|request)\.auth\b|verifyIdToken|setCustomUserClaims|revokeRefreshTokens|getAuth\(|signInWith\w*|createUserWith\w*|\bpassword\b|jsonwebtoken|\bjwt\b|bcrypt|argon2|\b(refresh|access|id|session)Token\b|multiFactor|\bmfa\b|\btotp\b|reauthenticate\w*|updatePassword|updateEmail|verifyBeforeUpdateEmail/i],
-  ['roles and permissions', /\b(isAdmin|isStaff|customClaims|permissions?|capabilit(y|ies))\b|\brole(s)?\s*[:=]|\ballow\s+(read|write|create|update|delete|list|get)\b|\[Authorize\b/],
+  ['roles and permissions', new RegExp(String.raw`\b(isAdmin|isStaff|customClaims|permissions?|capabilit(y|ies))\b|\brole(s)?\s*[:=](?!\s*\{?\s*["'\`](${ARIA})["'\`])|\ballow\s+(read|write|create|update|delete|list|get)\b|\[Authorize\b`)],
   ['endpoints and callables', /\bon(Call|Request)\s*\(|\b(app|router)\.(get|post|put|patch|delete|use)\s*\(|export\s+(async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b|\bhttp\.HandleFunc\b|\.(GET|POST|PUT|PATCH|DELETE)\(\s*["'`]|Map(Get|Post|Put|Patch|Delete)\b|\baxum::|\.route\(\s*["'`]\//],
   ['access rules', /\bCREATE\s+POLICY\b|auth\.uid\(\)/i],
   ['payments and webhooks', /\bstripe\b|paymentIntent|constructEvent|\bwebhook|\brefund/i],
@@ -69,7 +76,7 @@ export function classify(filePath, text) {
   if (!path || (SKIP_PATH.test(path) && !PROFILE.test(path))) return [];
   const cats = new Set();
   for (const [cat, re] of PATH_RULES) if (re.test(path)) cats.add(cat);
-  for (const [cat, re] of CONTENT_RULES) if (re.test(text ?? '')) cats.add(cat);
+  if (!TEST_PATH.test(path)) for (const [cat, re] of CONTENT_RULES) if (re.test(text ?? '')) cats.add(cat);
   return [...cats];
 }
 

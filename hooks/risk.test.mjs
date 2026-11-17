@@ -71,6 +71,26 @@ test('the negative cases from the evals do not warn', () => {
   assert.deepEqual(classify('README.md', 'password and stripe in a doc'), []);
 });
 
+test('test files do not warn for their content, only for a risky path', () => {
+  const fixture = 'user = make_user(password="x", role="admin"); stripe.Refund.create()';
+  for (const f of ['tests/test_refunds.py', 'app/billing/tests/test_views.py', 'src/__tests__/Login.test.tsx', 'e2e/checkout.spec.ts', 'functions/src/pay.test.ts']) {
+    assert.deepEqual(classify(f, fixture), [], f);
+  }
+  assert.ok(classify('functions/src/pay.ts', fixture).includes('payments and webhooks'));
+  assert.ok(classify('src/latest/contest.ts', fixture).length > 0); // "test" inside a word is not a test folder
+  assert.deepEqual(classify('tests/firestore.rules', fixture), ['access rules']);
+});
+
+test('ARIA roles are not authorization roles', () => {
+  for (const t of ['<div role="button" aria-label="Close">', "<ul role='tablist'>", '<View role={"dialog"}>', "{ role: 'status' }", 'role="img"']) {
+    assert.deepEqual(classify('src/Modal.tsx', t), [], t);
+  }
+  // The whole quoted value must be an ARIA word: longer roles that merely start with one still warn.
+  for (const t of ['role: "admin"', "role = 'staff'", 'User(role="admin")', 'roles: ["guia"]', 'role: tabOwner', "role: 'group-admin'", "role: 'log-reader'", "role: 'link.admin'", 'role: "tab admin"', 'role: link', 'role: group.admin']) {
+    assert.deepEqual(classify('src/users.ts', t), ['roles and permissions'], t);
+  }
+});
+
 test('SECURITY-PROFILE.md is the one markdown file that triggers a reminder', () => {
   assert.deepEqual(classify('SECURITY-PROFILE.md', 'Updated: 2026-11-03'), ['security profile']);
   assert.deepEqual(classify('app/SECURITY-PROFILE.md', ''), ['security profile']);
