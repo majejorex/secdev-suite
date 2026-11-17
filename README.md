@@ -39,6 +39,19 @@ You ask your agent for order refunds. It writes them, the tests pass, and it tel
 
 secdev runs that check. On session start it names the stack. When an edit touches auth, rules, payments, uploads or secrets, a hook reminds the agent once. Before the task is closed, the checklist goes through the controls that apply. Each one needs a `file:line` or a test. The sign-off ends with a verdict and the line `Hunt: not done`: the pass checked these controls and did not look for bugs outside the list.
 
+## How it differs from other security tools
+
+secdev does not hunt for bugs and does not replace a scanner. It makes the agent prove, per control, that the code it just wrote is safe.
+
+| Tool | What it is for | Where secdev differs |
+|---|---|---|
+| [`claude-code-security-review`](https://github.com/anthropics/claude-code-security-review) | A GitHub Action that reviews pull requests | secdev works inside the session, before the agent says "done", not after the PR |
+| Anthropic's `security-guidance` and [`claude-security`](https://github.com/anthropics/claude-plugins-official) | Security hooks and scans from the official directory | secdev gives a verdict per OWASP control, with `file:line` evidence, for Firebase, Supabase, Expo, Tauri and Electron |
+| [Trail of Bits `skills`](https://github.com/trailofbits/skills) | Audit and vulnerability-research skills for security engineers | secdev is a per-task checklist for the developer building the feature |
+| [`claude-code-owasp`](https://github.com/agamm/claude-code-owasp) | One skill with OWASP Top 10 and ASVS guidance | secdev adds MASVS and API Top 10, hooks, a CI gate and evals |
+
+Use them together. A scanner finds bugs in code that exists; secdev checks the controls before the task closes. What secdev does not do: bug hunting (use `claude-security`), runtime testing, or anything outside the stacks above.
+
 ## Can I trust it?
 
 This code runs in every session. Here is what you can check yourself.
