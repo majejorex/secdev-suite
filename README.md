@@ -39,6 +39,15 @@ You ask your agent for order refunds. It writes them, the tests pass, and it tel
 
 secdev runs that check. On session start it names the stack. When an edit touches auth, rules, payments, uploads or secrets, a hook reminds the agent once. Before the task is closed, the checklist goes through the controls that apply. Each one needs a `file:line` or a test. The sign-off ends with a verdict and the line `Hunt: not done`: the pass checked these controls and did not look for bugs outside the list.
 
+## Quick start
+
+```
+/plugin marketplace add majejorex/secdev-suite
+/plugin install secdev@secdev-suite
+```
+
+Restart Claude Code, open any project and ask: **"Can we ship this?"** You get a `Verdict:` line (BLOCK, PASS WITH ISSUES or PASS) and a table of the controls that are not met or could not be verified, each with a `file:line`. Not on Claude Code? `npx skills add majejorex/secdev-suite --skill security-checklist` installs the checklist for [Codex, Cursor and other agents](#install-as-a-skill-other-agents).
+
 ## How it differs from other security tools
 
 secdev does not hunt for bugs and does not replace a scanner. It makes the agent prove, per control, that the code it just wrote is safe.
