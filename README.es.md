@@ -40,6 +40,19 @@ Le pides a tu agente devoluciones de pedidos. Las escribe, los tests pasan y te 
 
 secdev hace esa comprobación. Al empezar la sesión nombra el stack. Si una edición toca auth, reglas, pagos, subidas o secretos, un hook se lo recuerda al agente una vez. Antes de cerrar la tarea, el checklist recorre los controles que aplican. Cada uno necesita un `archivo:línea` o un test. El cierre termina con un veredicto y la línea `Hunt: not done`: el pase miró estos controles y no buscó fallos fuera de la lista.
 
+## En qué se diferencia de otras herramientas
+
+secdev no caza bugs ni sustituye a un escáner. Hace que el agente demuestre, control por control, que el código que acaba de escribir es seguro.
+
+| Herramienta | Para qué sirve | En qué se diferencia secdev |
+|---|---|---|
+| [`claude-code-security-review`](https://github.com/anthropics/claude-code-security-review) | Una GitHub Action que revisa pull requests | secdev trabaja dentro de la sesión, antes de que el agente diga «hecho», no después del PR |
+| `security-guidance` y [`claude-security`](https://github.com/anthropics/claude-plugins-official) de Anthropic | Hooks y escaneos de seguridad del directorio oficial | secdev da un veredicto por control OWASP, con evidencia `file:line`, para Firebase, Supabase, Expo, Tauri y Electron |
+| [`skills` de Trail of Bits](https://github.com/trailofbits/skills) | Skills de auditoría e investigación de vulnerabilidades para ingenieros de seguridad | secdev es un checklist por tarea para quien construye la funcionalidad |
+| [`claude-code-owasp`](https://github.com/agamm/claude-code-owasp) | Una skill con guía de OWASP Top 10 y ASVS | secdev añade MASVS y API Top 10, hooks, un gate de CI y evals |
+
+Úsalas juntas. Un escáner encuentra bugs en el código que ya existe; secdev comprueba los controles antes de cerrar la tarea. Lo que secdev no hace: cazar bugs (usa `claude-security`), pruebas en ejecución, ni nada fuera de los stacks de arriba.
+
 ## ¿Puedo fiarme?
 
 Este código corre en todas tus sesiones. Esto es lo que puedes comprobar tú.
