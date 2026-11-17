@@ -1,0 +1,14 @@
+{
+  "name": "secdev",
+  "version": "0.5.6",
+  "description": "Your agent says it's secure. secdev makes it show the file:line. A P0/P1/P2 security checklist (OWASP ASVS 5.0, API Top 10 2023, MASVS 2.1) for Firebase, Supabase, Expo, Tauri and Electron apps, plus a CI security gate (gitleaks, osv-scanner, Semgrep) and a fix skill that re-verifies its own fixes.",
+  "author": {
+    "name": "Manu Jordan",
+    "url": "https://github.com/majejorex"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/majejorex/secdev-suite",
+  "repository": "https://github.com/majejorex/secdev-suite",
+  "icon": "./icon.png",
+  "keywords": ["security", "owasp", "asvs", "masvs", "api-security", "firebase", "checklist"]
+}
